@@ -150,7 +150,7 @@ const deletePart = () => {
                 <div class="flex gap-2">
                     <Link :href="route('stock-entries.create')">
                         <Button variant="outline" class="border-blue-200 text-blue-600 hover:bg-blue-50">
-                            <Package class="w-4 h-4 mr-2" /> Stock-in
+                            <Package class="w-4 h-4 mr-2" /> Stok Masuk
                         </Button>
                     </Link>
                     <Button @click="showAddForm = !showAddForm" :class="showAddForm ? 'bg-slate-500' : 'bg-blue-600'">

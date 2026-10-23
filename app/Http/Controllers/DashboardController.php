@@ -19,6 +19,12 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
+        // 1. The "Boss View" Redirect
+        if ($user && $user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // 2. Fetch Data for Staff & Finance
         $activeWorkOrders = WorkOrder::with(['vehicle.customer'])
             ->where('status', '!=', 'Selesai')
             ->orderBy('created_at', 'desc')

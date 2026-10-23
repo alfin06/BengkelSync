@@ -9,19 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user is logged in AND their role is 'admin'
+        // STRICTLY Admin only
         if (Auth::check() && Auth::user()->isAdmin()) {
-            return $next($request); // Let them through!
+            return $next($request);
         }
 
-        // If they are just 'staff', kick them back to their dashboard with an error
-        return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Halaman ini khusus untuk Manajemen.');
+        return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Halaman ini khusus untuk Owner/Admin.');
     }
 }

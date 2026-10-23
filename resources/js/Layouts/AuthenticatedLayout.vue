@@ -80,17 +80,20 @@ watch(() => page.props.flash, (flash) => {
                             <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
                                 
                                 <template v-if="user?.role === 'admin'">
-                                    <NavLink :href="route('admin.dashboard')" :active="route().current('admin.dashboard')">
+                                    <NavLink  :href="route('admin.dashboard')" :active="route().current('admin.dashboard')">
                                         Dashboard
-                                    </NavLink>
-                                    <NavLink :href="route('admin.work-orders.monitor')" :active="route().current('admin.work-orders.monitor')">
-                                        Monitoring
                                     </NavLink>
                                 </template>
 
                                 <template v-if="['staff', 'finance'].includes(user?.role)">
                                     <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                         Dashboard
+                                    </NavLink>
+                                </template>
+
+                                <template v-if="user?.role === 'admin' || user?.role === 'finance'">
+                                    <NavLink  :href="route('admin.work-orders.monitor')" :active="route().current('admin.work-orders.monitor')">
+                                        Monitoring
                                     </NavLink>
                                 </template>
 
@@ -123,10 +126,6 @@ watch(() => page.props.flash, (flash) => {
 
                                         <template #content>
                                             <DropdownLink :href="route('parts.index')"> Data Stok </DropdownLink>
-                                            <!-- <DropdownLink :href="route('parts.restock.page')"> Restock Barang </DropdownLink> -->
-                                            <DropdownLink :href="route('stock-entries.create')">
-                                                Stok Masuk
-                                            </DropdownLink>
                                             <DropdownLink :href="route('suppliers.index')">
                                                 Data Supplier
                                             </DropdownLink>

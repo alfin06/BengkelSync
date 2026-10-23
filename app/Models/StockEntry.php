@@ -13,7 +13,8 @@ class StockEntry extends Model
         'reference_number',
         'entry_date',
         'notes',
-        'total_cost'
+        'total_cost',
+        'grand_total', 'amount_paid', 'status', 'due_date'
     ];
 
     protected $casts = [
@@ -28,5 +29,11 @@ class StockEntry extends Model
     public function items(): HasMany
     {
         return $this->hasMany(StockEntryItem::class);
+    }
+
+    // Add this method to BOTH Invoice.php and StockEntry.php
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 }

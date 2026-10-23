@@ -75,4 +75,9 @@ class Invoice extends Model
     {
         return 'uuid';
     }
+
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
 }
