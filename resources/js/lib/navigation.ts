@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { LayoutDashboard } from 'lucide-vue-next';
+import { LayoutDashboard, UsersRound } from 'lucide-vue-next';
 
 export interface NavItem {
     /** Translation key of the label */
@@ -25,6 +25,14 @@ export const navigation: NavItem[] = [
         activePattern: 'dashboard',
         icon: LayoutDashboard,
         permission: null,
+        primary: true,
+    },
+    {
+        label: 'nav.customers',
+        route: 'customers.index',
+        activePattern: 'customers.*',
+        icon: UsersRound,
+        permission: 'customer.view',
         primary: true,
     },
 ];

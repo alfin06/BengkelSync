@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\ActiveBranchController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Customers\CustomerController;
+use App\Http\Controllers\Customers\CustomerLookupController;
+use App\Http\Controllers\Customers\VehicleController;
+use App\Http\Controllers\Customers\VehicleOwnerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
@@ -24,6 +28,16 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::put('/password', [PasswordController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('password.update');
+
+    // Customers and vehicles (shared by all branches of the tenant)
+    Route::get('/customers/lookup/phone', [CustomerLookupController::class, 'phone'])->name('customers.lookup.phone');
+    Route::get('/customers/lookup/search', [CustomerLookupController::class, 'search'])->name('customers.lookup.search');
+    Route::resource('customers', CustomerController::class);
+
+    Route::get('/customers/{customer}/vehicles/create', [VehicleController::class, 'create'])->name('vehicles.create');
+    Route::post('/customers/{customer}/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+    Route::resource('vehicles', VehicleController::class)->only(['show', 'edit', 'update', 'destroy']);
+    Route::put('/vehicles/{vehicle}/owner', [VehicleOwnerController::class, 'update'])->name('vehicles.owner.update');
 });
 
 require __DIR__.'/auth.php';

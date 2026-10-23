@@ -4,9 +4,13 @@ use App\Enums\DocumentType;
 use App\Enums\RoleName;
 use App\Models\AuditLog;
 use App\Models\Branch;
+use App\Models\Customer;
 use App\Models\DocumentSequence;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleOwnership;
 use App\Services\Audit\AuditLogger;
+use App\Services\Customers\VehicleService;
 use App\Services\Tenancy\ProvisionedTenant;
 use App\Support\DocumentNumber;
 use Illuminate\Support\Str;
@@ -26,6 +30,23 @@ it('isolates users', function () {
 
 it('isolates audit logs', function () {
     assertTenantIsolated(AuditLog::class, fn (ProvisionedTenant $shop) => app(AuditLogger::class)->record('test', $shop->branch));
+});
+
+it('isolates customers', function () {
+    assertTenantIsolated(Customer::class, fn (ProvisionedTenant $shop) => Customer::factory()->create());
+});
+
+it('isolates vehicles', function () {
+    assertTenantIsolated(Vehicle::class, fn (ProvisionedTenant $shop) => app(VehicleService::class)
+        ->create(Customer::factory()->create(), Vehicle::factory()->raw()));
+});
+
+it('isolates vehicle ownerships', function () {
+    assertTenantIsolated(VehicleOwnership::class, function (ProvisionedTenant $shop) {
+        $vehicle = app(VehicleService::class)->create(Customer::factory()->create(), Vehicle::factory()->raw());
+
+        return VehicleOwnership::query()->where('vehicle_id', $vehicle->id)->firstOrFail();
+    });
 });
 
 it('isolates document sequences', function () {

@@ -10,6 +10,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -30,6 +31,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenancy' => InitializeTenancy::class,
         ]);
+
+        // Route model binding must run inside the tenant: {customer} of another tenant is
+        // then simply not found (404), and tenant-scoped models never load without a tenant.
+        $middleware->prependToPriorityList(before: SubstituteBindings::class, prepend: InitializeTenancy::class);
 
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));

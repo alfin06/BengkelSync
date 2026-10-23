@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use App\Enums\RoleName;
 use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\Vehicle;
+use App\Services\Customers\VehicleService;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
 use App\Services\Users\UserService;
@@ -53,5 +56,26 @@ class DemoSeeder extends Seeder
                 );
             }
         });
+
+        $context->run($demo->tenant, $demo->branch, fn () => $this->customers());
+    }
+
+    /**
+     * Fictional customers with vehicles (Faker data, never real people).
+     */
+    private function customers(): void
+    {
+        $vehicles = app(VehicleService::class);
+
+        Customer::factory()->count(18)->create()->each(function (Customer $customer, int $index) use ($vehicles): void {
+            foreach (range(1, $index % 3 === 0 ? 2 : 1) as $ignored) {
+                $vehicles->create($customer, Vehicle::factory()->raw());
+            }
+        });
+
+        $company = Customer::factory()->company()->create(['npwp' => '01.234.567.8-901.000']);
+        foreach (range(1, 3) as $ignored) {
+            $vehicles->create($company, Vehicle::factory()->raw());
+        }
     }
 }

@@ -159,6 +159,7 @@ return [
 
     // Custom rules
     'phone' => ':Attribute harus berupa nomor Indonesia yang valid, contoh: 0812-3456-7890.',
+    'plate' => ':Attribute tidak valid. Contoh: B 1234 XYZ.',
 
     'custom' => [],
 
@@ -171,5 +172,22 @@ return [
         'phone' => 'nomor HP',
         'locale' => 'bahasa',
         'branch_id' => 'cabang',
+        'type' => 'jenis',
+        'whatsapp' => 'nomor WhatsApp',
+        'address' => 'alamat',
+        'npwp' => 'NPWP',
+        'notes' => 'catatan',
+        'plate_number' => 'plat nomor',
+        'make' => 'merek',
+        'model' => 'model',
+        'year' => 'tahun',
+        'color' => 'warna',
+        'vin' => 'nomor rangka',
+        'engine_number' => 'nomor mesin',
+        'transmission' => 'transmisi',
+        'fuel_type' => 'bahan bakar',
+        'last_odometer' => 'odometer',
+        'customer_id' => 'pelanggan',
+        'reason' => 'alasan',
     ],
 ];

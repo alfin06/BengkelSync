@@ -14,6 +14,17 @@ it('has the same keys in id.json and en.json', function () {
         ->and(array_filter($en, fn ($value) => trim((string) $value) === ''))->toBe([]);
 });
 
+it('never uses a PHP translation group as a JSON key prefix', function () {
+    // laravel-vue-i18n merges lang/{locale}/*.php over the JSON file, so a JSON key like
+    // "pagination.next" would silently show the PHP text ("Berikutnya &raquo;") in Vue.
+    $groups = collect(glob(lang_path('*/*.php')) ?: [])->map(fn (string $file) => basename($file, '.php'))->unique();
+    $keys = array_keys(json_decode((string) file_get_contents(lang_path('id.json')), true, flags: JSON_THROW_ON_ERROR));
+
+    $colliding = array_filter($keys, fn (string $key) => $groups->contains(strstr($key, '.', true)));
+
+    expect($colliding)->toBe([]);
+});
+
 it('has every custom English PHP translation in Indonesian too', function (string $group) {
     $en = require lang_path("en/{$group}.php");
     $id = require lang_path("id/{$group}.php");

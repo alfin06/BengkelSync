@@ -16,19 +16,19 @@ const disabledClass = cn(linkClass, 'pointer-events-none opacity-50');
 </script>
 
 <template>
-    <nav v-if="meta.last_page > 1" class="flex items-center justify-between gap-3" :aria-label="$t('pagination.label')">
+    <nav v-if="meta.last_page > 1" class="flex items-center justify-between gap-3" :aria-label="$t('pager.label')">
         <Link v-if="meta.prev_page_url" :href="meta.prev_page_url" preserve-scroll :class="linkClass" rel="prev">
-            <ChevronLeft aria-hidden="true" /> {{ $t('pagination.previous') }}
+            <ChevronLeft aria-hidden="true" /> {{ $t('pager.previous') }}
         </Link>
-        <span v-else :class="disabledClass" aria-disabled="true"><ChevronLeft aria-hidden="true" /> {{ $t('pagination.previous') }}</span>
+        <span v-else :class="disabledClass" aria-disabled="true"><ChevronLeft aria-hidden="true" /> {{ $t('pager.previous') }}</span>
 
         <p class="text-sm text-muted-foreground">
-            {{ $t('pagination.page_of', { page: String(meta.current_page), last: String(meta.last_page) }) }}
+            {{ $t('pager.page_of', { page: String(meta.current_page), last: String(meta.last_page) }) }}
         </p>
 
         <Link v-if="meta.next_page_url" :href="meta.next_page_url" preserve-scroll :class="linkClass" rel="next">
-            {{ $t('pagination.next') }} <ChevronRight aria-hidden="true" />
+            {{ $t('pager.next') }} <ChevronRight aria-hidden="true" />
         </Link>
-        <span v-else :class="disabledClass" aria-disabled="true">{{ $t('pagination.next') }} <ChevronRight aria-hidden="true" /></span>
+        <span v-else :class="disabledClass" aria-disabled="true">{{ $t('pager.next') }} <ChevronRight aria-hidden="true" /></span>
     </nav>
 </template>

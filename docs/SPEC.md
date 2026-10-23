@@ -61,7 +61,7 @@ All tables below have `tenant_id` unless marked [global]. [branch] = also has `b
 
 **customers**: id, type (individual|company), name, phone, whatsapp, email, address, npwp, notes, deleted_at
 **vehicles**: id, customer_id, plate_number (unique per tenant), make, model, year, color, vin, engine_number, transmission, fuel_type, last_odometer, notes, deleted_at
-**vehicle_ownerships**: vehicle_id, customer_id, from, to (history of transfers)
+**vehicle_ownerships**: vehicle_id, customer_id, started_on, ended_on (null = current owner), reason (history of transfers)
 
 **service_catalog**: id, code, name, default_price, estimated_minutes, is_active (tenant-wide; same price in all branches)
 
@@ -205,7 +205,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Audit log
 
 ### MVP — Phase 1: Core operations
-- [ ] Customers, vehicles, ownership history
+- [x] Customers, vehicles, ownership history
 - [ ] Service catalog
 - [ ] Mechanics (records without login; NIK encrypted, KTP on a private disk)
 - [ ] Parts, branch stock, suppliers, StockService (stock in, adjust)
