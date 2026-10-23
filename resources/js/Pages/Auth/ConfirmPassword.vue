@@ -1,55 +1,40 @@
-<script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+<script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { Button } from '@/Components/ui/button';
+import FormField from '@/Components/ui/FormField.vue';
+import { Input } from '@/Components/ui/input';
+import GuestLayout from '@/Layouts/GuestLayout.vue';
 
-const form = useForm({
-    password: '',
-});
+const form = useForm({ password: '' });
 
-const submit = () => {
+function submit(): void {
     form.post(route('password.confirm'), {
         onFinish: () => form.reset(),
     });
-};
+}
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Confirm Password" />
+    <Head :title="$t('confirm_password.title')" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
-        </div>
+    <GuestLayout :title="$t('confirm_password.title')" :description="$t('confirm_password.description')">
+        <form class="grid gap-4" novalidate @submit.prevent="submit">
+            <FormField id="password" :label="$t('fields.password')" :error="form.errors.password">
+                <template #default="{ invalid, describedBy }">
+                    <Input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        autocomplete="current-password"
+                        autofocus
+                        required
+                        :invalid="invalid"
+                        :aria-describedby="describedBy"
+                    />
+                </template>
+            </FormField>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="password" value="Password" />
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                    autofocus
-                />
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4 flex justify-end">
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Confirm
-                </PrimaryButton>
-            </div>
+            <Button type="submit" class="w-full" :loading="form.processing">{{ $t('confirm_password.submit') }}</Button>
         </form>
     </GuestLayout>
 </template>

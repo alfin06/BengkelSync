@@ -2,62 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Http\Requests\Profile\UpdateProfileRequest;
+use App\Models\User;
+use App\Services\Users\UserService;
+use App\Support\Phone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): Response
     {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-        ]);
-    }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
+        /** @var User $user */
         $user = $request->user();
 
-        Auth::logout();
+        return Inertia::render('Profile/Edit', [
+            'profile' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone === null ? '' : Phone::format($user->phone),
+                'locale' => $user->locale ?? app()->getLocale(),
+            ],
+            'locales' => config('app.supported_locales'),
+        ]);
+    }
 
-        $user->delete();
+    public function update(UpdateProfileRequest $request, UserService $users): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        /** @var array{name: string, phone?: string|null, locale: string} $data */
+        $data = $request->validated();
 
-        return Redirect::to('/');
+        $users->updateProfile($user, $data);
+
+        return back()->with('success', __('profile.saved'));
     }
 }

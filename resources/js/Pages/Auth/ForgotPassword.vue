@@ -1,68 +1,43 @@
-<script setup>
+<script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Button } from '@/Components/ui/button';
+import FormField from '@/Components/ui/FormField.vue';
+import { Input } from '@/Components/ui/input';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
 
-defineProps({
-    status: {
-        type: String,
-    },
-});
+defineProps<{ status?: string | null }>();
 
-const form = useForm({
-    email: '',
-});
-
-const submit = () => {
-    form.post(route('password.email'));
-};
+const form = useForm({ email: '' });
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Forgot Password" />
+    <Head :title="$t('forgot.title')" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
-        </div>
+    <GuestLayout :title="$t('forgot.title')" :description="$t('forgot.description')">
+        <p v-if="status" class="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-800" role="status">{{ status }}</p>
 
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600"
-        >
-            {{ status }}
-        </div>
+        <form class="grid gap-4" novalidate @submit.prevent="form.post(route('password.email'))">
+            <FormField id="email" :label="$t('fields.email')" :error="form.errors.email">
+                <template #default="{ invalid, describedBy }">
+                    <Input
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        autocomplete="username"
+                        inputmode="email"
+                        autofocus
+                        required
+                        :invalid="invalid"
+                        :aria-describedby="describedBy"
+                    />
+                </template>
+            </FormField>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+            <Button type="submit" class="w-full" :loading="form.processing">{{ $t('forgot.submit') }}</Button>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Email Password Reset Link
-                </PrimaryButton>
-            </div>
+            <Link :href="route('login')" class="text-center text-sm text-primary underline-offset-4 hover:underline">
+                {{ $t('forgot.back') }}
+            </Link>
         </form>
     </GuestLayout>
 </template>

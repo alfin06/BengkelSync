@@ -1,73 +1,66 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
-use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Tests\TestCase;
+use Inertia\Testing\AssertableInertia as Assert;
 
-class PasswordResetTest extends TestCase
-{
-    use RefreshDatabase;
+it('shows the forgot password page', function () {
+    $this->get(route('password.request'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Auth/ForgotPassword'));
+});
 
-    public function test_reset_password_link_screen_can_be_rendered(): void
-    {
-        $response = $this->get('/forgot-password');
+it('sends a reset link to a registered email', function () {
+    Notification::fake();
+    $shop = provisionTenant();
 
-        $response->assertStatus(200);
-    }
+    $this->post(route('password.email'), ['email' => $shop->owner->email])
+        ->assertSessionHas('status', __('passwords.sent_if_exists'));
 
-    public function test_reset_password_link_can_be_requested(): void
-    {
-        Notification::fake();
+    Notification::assertSentTo($shop->owner, ResetPassword::class);
+});
 
-        $user = User::factory()->create();
+it('answers the same for an unknown email, so accounts cannot be discovered', function () {
+    Notification::fake();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+    $this->post(route('password.email'), ['email' => 'nobody@example.test'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('status', __('passwords.sent_if_exists'));
 
-        Notification::assertSentTo($user, ResetPassword::class);
-    }
+    Notification::assertNothingSent();
+});
 
-    public function test_reset_password_screen_can_be_rendered(): void
-    {
-        Notification::fake();
+it('resets the password with a valid token', function () {
+    Notification::fake();
+    $shop = provisionTenant();
 
-        $user = User::factory()->create();
+    $this->post(route('password.email'), ['email' => $shop->owner->email]);
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+    Notification::assertSentTo($shop->owner, ResetPassword::class, function (ResetPassword $notification) use ($shop) {
+        $this->get(route('password.reset', $notification->token))
+            ->assertInertia(fn (Assert $page) => $page->component('Auth/ResetPassword'));
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
+        $this->post(route('password.store'), [
+            'token' => $notification->token,
+            'email' => $shop->owner->email,
+            'password' => 'newpassword1',
+            'password_confirmation' => 'newpassword1',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('login'));
 
-            $response->assertStatus(200);
+        return true;
+    });
 
-            return true;
-        });
-    }
+    expect(Hash::check('newpassword1', (string) $shop->owner->fresh()?->password))->toBeTrue();
+});
 
-    public function test_password_can_be_reset_with_valid_token(): void
-    {
-        Notification::fake();
+it('rejects a weak new password', function () {
+    $shop = provisionTenant();
 
-        $user = User::factory()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ]);
-
-            $response
-                ->assertSessionHasNoErrors()
-                ->assertRedirect(route('login'));
-
-            return true;
-        });
-    }
-}
+    $this->post(route('password.store'), [
+        'token' => 'whatever',
+        'email' => $shop->owner->email,
+        'password' => 'short',
+        'password_confirmation' => 'short',
+    ])->assertSessionHasErrors('password');
+});

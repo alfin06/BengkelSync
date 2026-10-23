@@ -1,33 +1,29 @@
-<script setup>
-import { useVModel } from "@vueuse/core";
-import { cn } from "@/lib/utils";
+<script setup lang="ts">
+import type { HTMLAttributes } from 'vue';
+import { cn } from '@/lib/utils';
 
-const props = defineProps({
-  defaultValue: { type: [String, Number], required: false },
-  modelValue: { type: [String, Number], required: false },
-  class: {
-    type: [Boolean, null, String, Object, Array],
-    required: false,
-    skipCheck: true,
-  },
-});
+defineOptions({ inheritAttrs: false });
 
-const emits = defineEmits(["update:modelValue"]);
+const props = defineProps<{
+    invalid?: boolean;
+    class?: HTMLAttributes['class'];
+}>();
 
-const modelValue = useVModel(props, "modelValue", emits, {
-  passive: true,
-  defaultValue: props.defaultValue,
-});
+const model = defineModel<string | number | null>();
 </script>
 
 <template>
-  <input
-    v-model="modelValue"
-    :class="
-      cn(
-        'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
-        props.class,
-      )
-    "
-  />
+    <!-- text-base on phones avoids the automatic zoom on focus in mobile Safari -->
+    <input
+        v-model="model"
+        v-bind="$attrs"
+        :aria-invalid="props.invalid || undefined"
+        :class="
+            cn(
+                'flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:text-sm',
+                props.invalid && 'border-destructive focus-visible:ring-destructive',
+                props.class,
+            )
+        "
+    />
 </template>

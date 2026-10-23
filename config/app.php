@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'Asia/Jakarta',
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
@@ -78,9 +78,12 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'id'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+
+    // Languages a user can choose. Indonesian is the source language (CLAUDE.md rule 4).
+    'supported_locales' => ['id', 'en'],
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'id_ID'),
 

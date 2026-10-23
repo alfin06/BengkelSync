@@ -1,27 +1,38 @@
-<script setup>
-import { Primitive } from "reka-ui";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from ".";
+<script setup lang="ts">
+import { Loader2 } from 'lucide-vue-next';
+import { Primitive, type PrimitiveProps } from 'reka-ui';
+import type { HTMLAttributes } from 'vue';
+import { cn } from '@/lib/utils';
+import { buttonVariants, type ButtonVariants } from '.';
 
-const props = defineProps({
-  variant: { type: null, required: false },
-  size: { type: null, required: false },
-  class: {
-    type: [Boolean, null, String, Object, Array],
-    required: false,
-    skipCheck: true,
-  },
-  asChild: { type: Boolean, required: false },
-  as: { type: null, required: false, default: "button" },
+interface Props extends PrimitiveProps {
+    variant?: ButtonVariants['variant'];
+    size?: ButtonVariants['size'];
+    /** Shows a spinner and disables the button (prevents double submit). */
+    loading?: boolean;
+    disabled?: boolean;
+    class?: HTMLAttributes['class'];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    as: 'button',
+    variant: 'default',
+    size: 'default',
+    loading: false,
+    disabled: false,
+    class: undefined,
 });
 </script>
 
 <template>
-  <Primitive
-    :as="as"
-    :as-child="asChild"
-    :class="cn(buttonVariants({ variant, size }), props.class)"
-  >
-    <slot />
-  </Primitive>
+    <Primitive
+        :as="as"
+        :as-child="asChild"
+        :disabled="as === 'button' ? disabled || loading : undefined"
+        :aria-busy="loading || undefined"
+        :class="cn(buttonVariants({ variant, size }), props.class)"
+    >
+        <Loader2 v-if="loading" class="animate-spin" aria-hidden="true" />
+        <slot />
+    </Primitive>
 </template>

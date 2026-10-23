@@ -3,6 +3,8 @@
 Date: 2026-10-21 · Scope: SPEC section 10 checklist · Branch `main` @ `b4ffcbc` plus uncommitted changes in the working tree.
 No code was changed for this audit.
 
+> **Update 2026-10-24:** the audited code has been retired and is kept under the git tag `legacy-v0`. The Phase 0 foundation replaces it (see `docs/PHASE0_PLAN.md`). The findings below describe the legacy code and stay here as history and as UI reference.
+
 **Verdict in one paragraph:** The app is a working single-shop Laravel + Inertia/Vue system with the right overall flow (customer → vehicle → work order → invoice). The UI pages are a usable starting point. The backend, however, does not meet any of the SPEC's non-negotiable rules: there is no tenant or branch concept, authorization is almost entirely missing on the server, money is stored as `decimal` and computed with floats, stock is changed directly in about ten places (and parts on invoices are deducted twice), there are no document numbers, no translations, and no real tests. Plan: keep the Inertia/Vue shell and most pages, refactor the master-data modules (customers, vehicles, parts, suppliers, expenses), and rewrite the transactional core (work orders, invoices, payments, stock) behind Services. Do this through additive migrations that preserve the existing data.
 
 ---

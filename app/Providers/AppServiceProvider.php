@@ -2,42 +2,25 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Vite;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
-
-use Illuminate\Support\Facades\Gate;
-use App\Models\User;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        // One context per request/job; flushed between requests.
+        $this->app->scoped(TenantContext::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Define exact capabilities
-        Gate::define('view_financial_reports', function (User $user) {
-            return in_array($user->role, ['admin', 'finance']);
-        });
+        // Lazy loading, silently discarded attributes and missing attributes all throw
+        // outside production, so N+1 queries and typos surface during development.
+        Model::shouldBeStrict(! $this->app->isProduction());
 
-        Gate::define('edit_invoices', function (User $user) {
-            return in_array($user->role, ['admin', 'finance']);
-        });
-
-        Gate::define('manage_stock', function (User $user) {
-            return in_array($user->role, ['admin', 'finance', 'staff']);
-        });
-
-        Gate::define('manage_users', function (User $user) {
-            return $user->role === 'admin';
-        });
+        Password::defaults(fn () => Password::min(8)->letters()->numbers());
     }
 }

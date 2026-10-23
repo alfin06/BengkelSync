@@ -1,99 +1,102 @@
 <?php
 
-namespace Tests\Feature;
+use App\Enums\RoleName;
+use App\Models\AuditLog;
+use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+it('shows the profile page', function () {
+    $shop = provisionTenant();
 
-class ProfileTest extends TestCase
-{
-    use RefreshDatabase;
+    $this->actingAs($shop->owner)
+        ->get(route('profile.edit'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Profile/Edit')
+            ->where('profile.email', $shop->owner->email)
+            ->where('locales', ['id', 'en']));
+});
 
-    public function test_profile_page_is_displayed(): void
-    {
-        $user = User::factory()->create();
+it('updates name, phone and language, storing the phone as +62', function () {
+    $shop = provisionTenant();
+    $user = userWithRole($shop, RoleName::FrontDesk);
 
-        $response = $this
-            ->actingAs($user)
-            ->get('/profile');
+    $this->actingAs($user)
+        ->patch(route('profile.update'), ['name' => 'Budi Santoso', 'phone' => '0812-3456-7890', 'locale' => 'en'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('success');
 
-        $response->assertOk();
-    }
+    $user->refresh();
 
-    public function test_profile_information_can_be_updated(): void
-    {
-        $user = User::factory()->create();
+    expect($user->name)->toBe('Budi Santoso')
+        ->and($user->phone)->toBe('+6281234567890')
+        ->and($user->locale)->toBe('en');
+});
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
+it('rejects an invalid phone number and an unsupported language', function () {
+    $shop = provisionTenant();
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+    $this->actingAs($shop->owner)
+        ->patch(route('profile.update'), ['name' => 'X', 'phone' => '12', 'locale' => 'fr'])
+        ->assertSessionHasErrors(['phone', 'locale']);
+});
 
-        $user->refresh();
+it('never changes email or role from the profile', function () {
+    $shop = provisionTenant();
+    $user = userWithRole($shop, RoleName::FrontDesk);
+    $email = $user->email;
 
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
-    }
+    $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => 'Budi',
+        'locale' => 'id',
+        'email' => 'hacker@example.test',
+        'is_active' => false,
+        'all_branches' => true,
+        'tenant_id' => 999,
+    ]);
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
-    {
-        $user = User::factory()->create();
+    $user->refresh();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
+    expect($user->email)->toBe($email)
+        ->and($user->is_active)->toBeTrue()
+        ->and($user->all_branches)->toBeFalse()
+        ->and($user->tenant_id)->toBe($shop->tenant->id);
+});
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+it('has no self-delete', function () {
+    $shop = provisionTenant();
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
-    }
+    $this->actingAs($shop->owner)->delete('/profile')->assertMethodNotAllowed();
+});
 
-    public function test_user_can_delete_their_account(): void
-    {
-        $user = User::factory()->create();
+it('changes the password when the current one is correct, and audits it', function () {
+    $shop = provisionTenant();
 
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
+    $this->actingAs($shop->owner)
+        ->put(route('password.update'), [
+            'current_password' => TEST_PASSWORD,
+            'password' => 'newpassword1',
+            'password_confirmation' => 'newpassword1',
+        ])
+        ->assertSessionHasNoErrors();
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
+    expect(Hash::check('newpassword1', (string) $shop->owner->fresh()?->password))->toBeTrue();
 
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
-    }
+    $log = inTenant($shop->tenant, null, fn () => AuditLog::query()->where('action', 'password_changed')->first());
 
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
+    expect($log)->not->toBeNull()
+        ->and($log?->auditable_id)->toBe($shop->owner->id)
+        ->and(json_encode($log?->getAttributes()))->not->toContain('newpassword1');
+});
 
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
-                'password' => 'wrong-password',
-            ]);
+it('does not change the password when the current one is wrong', function () {
+    $shop = provisionTenant();
 
-        $response
-            ->assertSessionHasErrors('password')
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->fresh());
-    }
-}
+    $this->actingAs($shop->owner)
+        ->put(route('password.update'), [
+            'current_password' => 'wrong-password1',
+            'password' => 'newpassword1',
+            'password_confirmation' => 'newpassword1',
+        ])
+        ->assertSessionHasErrors('current_password');
+});

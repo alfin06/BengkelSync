@@ -1,6 +1,21 @@
 # Phase 0 Plan — Foundation
 
-Status: **awaiting approval** · Covers SPEC section 9 "MVP — Phase 0" · Written 2026-10-24
+Status: **implemented on branch `phase-0` (2026-10-24), not pushed; awaiting review** · Covers SPEC section 9 "MVP — Phase 0"
+
+## Result and deviations from the plan
+Decisions taken: old modules retired (tag `legacy-v0`), Google login dropped, local database wiped, everything kept local until review.
+
+| Planned | Built | Why |
+|---|---|---|
+| Pest 5 | Pest 4.7 | Pest 5 needs PHPUnit 13; Laravel 13's skeleton pins PHPUnit 12. |
+| Latest TypeScript | TypeScript 5.9 | vue-tsc 3.3 does not support TypeScript 7 yet. |
+| Remove Socialite | Also removed Sanctum and Breeze | No API tokens are used; Breeze is only a scaffolding tool. |
+| Default branch "first by name" | Oldest branch (the main one) | Found while testing in the browser: the owner landed in the second branch. |
+| — | Forgot-password always gives the same answer | The old version revealed which emails have an account. |
+| — | Every model declares its DB defaults in `$attributes` | Required by strict models (missing attributes throw outside production). |
+| `npm audit` must pass | Passes at `--audit-level=high` | 3 moderate advisories remain in Tailwind 3's build-time CSS parser; the fix is the Tailwind 4 upgrade (follow-up). |
+
+Checks at the end of Phase 0: 153 Pest tests passing, Larastan level 6 clean, Pint clean, `vue-tsc` clean, production build OK, `composer audit` clean. UI checked in the browser at 375px (phone) and 1280px (desktop): login with an inline error, dashboard, bottom sheet menu, profile save with phone normalization, branch switch, 404 page.
 
 ## Goal
 By the end of Phase 0 the app has a clean, tested foundation:

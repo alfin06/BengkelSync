@@ -18,7 +18,7 @@ Uses spatie/laravel-permission with teams (`team_id` = `tenant_id`).
 - **Roles** are per tenant. Each new tenant gets the default roles copied in; the tenant owner can create or edit roles in a permission matrix UI.
 - **Branch access**: `branch_user` pivot. A user only works in the branches assigned to them. Owner and tenant-wide roles can be given "all branches".
 
-Resources: `customer, vehicle, mechanic, work_order, invoice, payment, part, stock, supplier, purchase, supplier_payment, cash, expense, dashboard, report, branch, user, role, settings`.
+Resources: `customer, vehicle, mechanic, work_order, invoice, payment, part, stock, supplier, purchase, supplier_payment, cash, expense, dashboard, report, branch, user, role, settings, audit_log`.
 Actions: `view, create, update, delete`, plus:
 - `mechanic.view_identity` (see NIK and the KTP photo)
 - `work_order.assign`, `work_order.change_status`, `work_order.update_closed`
@@ -27,6 +27,7 @@ Actions: `view, create, update, delete`, plus:
 - `stock.adjust`, `stock.transfer` (between branches)
 - `cash.transfer` (move money between cash accounts, e.g. topping up petty cash), `cash.adjust` (correct a balance after a cash count)
 - `dashboard.view_financials`
+- `audit_log.view` (read the audit log)
 - `billing.manage` (subscription, owner only)
 
 Default roles per tenant (the owner can edit them or add more in the permission matrix):
@@ -190,18 +191,18 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 
 ### MVP — Phase 0: Audit & foundation
 - [x] Audit existing code (see section 10) and fill in "Current codebase state" in CLAUDE.md
-- [ ] Security quick fixes in the existing app: remove the committed DB dump, close public sign-up, move KTP photos to a private disk
-- [ ] Clean migration baseline (no production data exists; see docs/AUDIT.md)
-- [ ] Tooling: Pest, Larastan, Pint, TypeScript checks
-- [ ] Shared UI kit (mobile-first layout, money input, dialogs, list/card, pagination, empty states)
-- [ ] Tenancy: tenants table, `BelongsToTenant` trait, isolation tests
-- [ ] Branches, branch assignment, active-branch middleware
-- [ ] spatie/permission with teams, permission seeder, default roles per tenant
-- [ ] `tenant:create` artisan command (tenant + first branch + owner + defaults)
-- [ ] Login, logout, forgot password
-- [ ] i18n shared between Laravel and Vue; locale per user
-- [ ] Support helpers: Money, DocumentNumber, PlateNumber, Phone (with tests)
-- [ ] Audit log
+- [x] Security quick fixes: committed DB dump untracked, public sign-up removed, legacy KTP upload retired (git history rewrite of the dump is still pending, see AUDIT §6)
+- [x] Clean migration baseline (no production data exists; see docs/AUDIT.md)
+- [x] Tooling: Pest, Larastan, Pint, TypeScript checks
+- [x] Shared UI kit (mobile-first layout, money input, dialogs, list/card, pagination, empty states)
+- [x] Tenancy: tenants table, `BelongsToTenant` trait, isolation tests
+- [x] Branches, branch assignment, active-branch middleware
+- [x] spatie/permission with teams, permission seeder, default roles per tenant
+- [x] `tenant:create` artisan command (tenant + first branch + owner + defaults)
+- [x] Login, logout, forgot password
+- [x] i18n shared between Laravel and Vue; locale per user
+- [x] Support helpers: Money, DocumentNumber, PlateNumber, Phone (with tests)
+- [x] Audit log
 
 ### MVP — Phase 1: Core operations
 - [ ] Customers, vehicles, ownership history
