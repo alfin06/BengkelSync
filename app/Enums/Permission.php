@@ -20,6 +20,11 @@ enum Permission: string
     case VehicleUpdate = 'vehicle.update';
     case VehicleDelete = 'vehicle.delete';
 
+    case ServiceView = 'service.view';
+    case ServiceCreate = 'service.create';
+    case ServiceUpdate = 'service.update';
+    case ServiceDelete = 'service.delete';
+
     case MechanicView = 'mechanic.view';
     case MechanicCreate = 'mechanic.create';
     case MechanicUpdate = 'mechanic.update';

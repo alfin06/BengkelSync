@@ -27,5 +27,9 @@ return [
         'last_odometer' => 'odometer',
         'customer_id' => 'customer',
         'reason' => 'reason',
+        'code' => 'code',
+        'category' => 'category',
+        'default_price' => 'price',
+        'estimated_minutes' => 'estimated time',
     ],
 ];

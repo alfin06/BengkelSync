@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActiveBranchController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Catalog\ServiceItemController;
 use App\Http\Controllers\Customers\CustomerController;
 use App\Http\Controllers\Customers\CustomerLookupController;
 use App\Http\Controllers\Customers\VehicleController;
@@ -38,6 +39,9 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::post('/customers/{customer}/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
     Route::resource('vehicles', VehicleController::class)->only(['show', 'edit', 'update', 'destroy']);
     Route::put('/vehicles/{vehicle}/owner', [VehicleOwnerController::class, 'update'])->name('vehicles.owner.update');
+
+    // Service catalog (tenant-wide price list of jobs)
+    Route::resource('service-items', ServiceItemController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 
 require __DIR__.'/auth.php';

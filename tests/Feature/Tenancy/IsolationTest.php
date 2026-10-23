@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\DocumentSequence;
+use App\Models\ServiceItem;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleOwnership;
@@ -47,6 +48,10 @@ it('isolates vehicle ownerships', function () {
 
         return VehicleOwnership::query()->where('vehicle_id', $vehicle->id)->firstOrFail();
     });
+});
+
+it('isolates service catalog items', function () {
+    assertTenantIsolated(ServiceItem::class, fn (ProvisionedTenant $shop) => ServiceItem::factory()->create());
 });
 
 it('isolates document sequences', function () {

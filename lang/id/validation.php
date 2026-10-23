@@ -189,5 +189,9 @@ return [
         'last_odometer' => 'odometer',
         'customer_id' => 'pelanggan',
         'reason' => 'alasan',
+        'code' => 'kode',
+        'category' => 'kategori',
+        'default_price' => 'harga',
+        'estimated_minutes' => 'perkiraan waktu',
     ],
 ];

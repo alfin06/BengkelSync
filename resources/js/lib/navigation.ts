@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { LayoutDashboard, UsersRound } from 'lucide-vue-next';
+import { ClipboardList, LayoutDashboard, UsersRound } from 'lucide-vue-next';
 
 export interface NavItem {
     /** Translation key of the label */
@@ -34,5 +34,13 @@ export const navigation: NavItem[] = [
         icon: UsersRound,
         permission: 'customer.view',
         primary: true,
+    },
+    {
+        label: 'nav.services',
+        route: 'service-items.index',
+        activePattern: 'service-items.*',
+        icon: ClipboardList,
+        permission: 'service.view',
+        primary: false,
     },
 ];

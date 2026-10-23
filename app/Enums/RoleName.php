@@ -71,6 +71,7 @@ enum RoleName: string
             Permission::VehicleCreate,
             Permission::VehicleUpdate,
             Permission::MechanicView,
+            Permission::ServiceView,
             Permission::WorkOrderView,
             Permission::WorkOrderCreate,
             Permission::WorkOrderUpdate,
@@ -100,6 +101,8 @@ enum RoleName: string
         return [
             ...self::frontDesk(),
             Permission::MechanicViewIdentity,
+            Permission::ServiceCreate,
+            Permission::ServiceUpdate,
             Permission::InvoiceUpdate,
             Permission::InvoiceUpdatePaid,
             Permission::InvoiceVoid,

@@ -18,7 +18,7 @@ Uses spatie/laravel-permission with teams (`team_id` = `tenant_id`).
 - **Roles** are per tenant. Each new tenant gets the default roles copied in; the tenant owner can create or edit roles in a permission matrix UI.
 - **Branch access**: `branch_user` pivot. A user only works in the branches assigned to them. Owner and tenant-wide roles can be given "all branches".
 
-Resources: `customer, vehicle, mechanic, work_order, invoice, payment, part, stock, supplier, purchase, supplier_payment, cash, expense, dashboard, report, branch, user, role, settings, audit_log`.
+Resources: `customer, vehicle, service, mechanic, work_order, invoice, payment, part, stock, supplier, purchase, supplier_payment, cash, expense, dashboard, report, branch, user, role, settings, audit_log`.
 Actions: `view, create, update, delete`, plus:
 - `mechanic.view_identity` (see NIK and the KTP photo)
 - `work_order.assign`, `work_order.change_status`, `work_order.update_closed`
@@ -35,8 +35,8 @@ Default roles per tenant (the owner can edit them or add more in the permission 
 |---|---|
 | Owner (Pemilik) | everything; system role, cannot be deleted; at least one active owner must exist |
 | Branch Manager (Kepala Cabang) | everything within assigned branches except billing, roles, tenant settings |
-| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), work orders incl. assign and change status, create invoices, record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries), suppliers (view/create), cash (view) |
-| Finance (Keuangan) | everything Front Desk has, plus invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, part prices, stock adjust, mechanic identity, financial dashboard, reports |
+| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices, record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries), suppliers (view/create), cash (view) |
+| Finance (Keuangan) | everything Front Desk has, plus invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, service and part prices (service create/update), stock adjust, mechanic identity, financial dashboard, reports |
 | Warehouse (Gudang) | parts, stock, suppliers, purchases, transfers |
 
 Mechanics do not log in (section 11). There is no Mechanic role; mechanics are records that staff assign to work orders.
@@ -63,12 +63,12 @@ All tables below have `tenant_id` unless marked [global]. [branch] = also has `b
 **vehicles**: id, customer_id, plate_number (unique per tenant), make, model, year, color, vin, engine_number, transmission, fuel_type, last_odometer, notes, deleted_at
 **vehicle_ownerships**: vehicle_id, customer_id, started_on, ended_on (null = current owner), reason (history of transfers)
 
-**service_catalog**: id, code, name, default_price, estimated_minutes, is_active (tenant-wide; same price in all branches)
+**service_items** (the service catalog): id, code (optional, unique per tenant), name, category (optional), default_price, estimated_minutes, is_active (tenant-wide; same price in all branches). Used jobs cannot be deleted, only deactivated.
 
 **work_orders** [branch]: id, number, vehicle_id, customer_id, status, complaint, diagnosis, odometer_in, estimated_completion, started_at, completed_at, notes, created_by
 Status flow: `draft → queued → in_progress → waiting_parts → completed → invoiced → closed`; `cancelled` from any state before `invoiced`.
 **mechanics** [branch]: id, name, phone, nik (encrypted at rest; shown only with `mechanic.view_identity`), ktp_path (private disk, served only through an authorized download), is_active, notes, deleted_at. Mechanics have no login.
-**work_order_mechanic** pivot (work_order_id, mechanic_id); **work_order_services**: description, service_id (nullable), qty, unit_price, mechanic_id (nullable → mechanics)
+**work_order_mechanic** pivot (work_order_id, mechanic_id); **work_order_services**: description, service_item_id (nullable → service_items), qty, unit_price, mechanic_id (nullable → mechanics)
 **work_order_tasks**: work_order_id, description, is_done, sort (the front-desk checklist of what to check or do, e.g. "Cek bunyi kaki-kaki"; no price)
 **work_order_parts**: part_id, qty, unit_price, unit_cost (snapshots)
 
@@ -206,7 +206,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 
 ### MVP — Phase 1: Core operations
 - [x] Customers, vehicles, ownership history
-- [ ] Service catalog
+- [x] Service catalog
 - [ ] Mechanics (records without login; NIK encrypted, KTP on a private disk)
 - [ ] Parts, branch stock, suppliers, StockService (stock in, adjust)
 - [ ] Purchases with supplier debt and supplier payments
