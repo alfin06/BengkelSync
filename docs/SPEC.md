@@ -91,10 +91,10 @@ Status flow: `draft → queued → in_progress → waiting_parts → completed �
 - A cash count that differs from the system balance is recorded as an `adjustment` with a required reason (`cash.adjust`).
 - All writes go through `CashService` in a transaction (same rule as `StockService`).
 
-**parts**: id, sku (unique per tenant), name, brand, category, unit, cost_price, sell_price, is_active, deleted_at (catalog and prices are tenant-wide, same in all branches; stock is per branch)
-**part_branch_stock**: part_id, branch_id, qty, min_stock, location
+**parts**: id, sku (unique per tenant), name, brand, category, unit (pcs|set|pair|bottle|can|liter|meter|kg; only liter, meter and kg allow decimals), cost_price, sell_price, is_active, deleted_at (catalog and prices are tenant-wide, same in all branches; stock is per branch)
+**part_branch_stock**: part_id, branch_id, qty DECIMAL(12,2), min_stock (low-stock threshold), location. Quantities have up to 2 decimals (e.g. 4,2 liter oil). qty can never go below zero (also a database CHECK): a part that is out of stock cannot be used. When qty drops to or below min_stock, staff of the branch with stock.view get an in-app notification (once per crossing).
 **suppliers**: id, name, phone, whatsapp, sales_name, email, address, npwp, notes, deleted_at
-**stock_movements** [branch]: part_id, type (purchase|work_order_use|invoice_edit|return|adjustment|transfer_in|transfer_out), qty (+/−), unit_cost, reference_type, reference_id, note, created_by
+**stock_movements** [branch]: part_id, type (purchase|work_order_use|invoice_edit|return|adjustment|transfer_in|transfer_out), qty (+/−, DECIMAL(12,2)), qty_after, unit_cost, reference_type, reference_id, note, created_by
 
 **Purchases and supplier debt.** Receiving goods from a supplier is a purchase. It can be paid immediately, partly, or later (hutang supplier).
 **purchases** [branch]: id, number (`PB`), supplier_id, supplier_ref (the supplier's own invoice number), purchase_date, due_date (nullable), total, amount_paid, status (unpaid|partial|paid|void), notes, created_by
@@ -208,7 +208,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Customers, vehicles, ownership history
 - [x] Service catalog
 - [x] Mechanics (records without login; NIK encrypted, KTP on a private disk)
-- [ ] Parts, branch stock, suppliers, StockService (stock in, adjust)
+- [x] Parts, branch stock, suppliers, StockService (stock in, adjust), low-stock notifications
 - [ ] Purchases with supplier debt and supplier payments
 - [ ] Cash accounts, payment methods, CashService
 - [ ] Work orders with status flow, task checklist, and mechanic assignment

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LogOut, Menu, UserRound, Wrench } from 'lucide-vue-next';
+import { Bell, LogOut, Menu, UserRound, Wrench } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import BranchSwitcher from '@/Components/layout/BranchSwitcher.vue';
 import FlashToasts from '@/Components/layout/FlashToasts.vue';
@@ -85,8 +85,26 @@ const shopName = computed(() => page.props.tenant?.name ?? page.props.appName);
         <div class="md:pl-60">
             <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
                 <span class="truncate font-semibold md:hidden">{{ shopName }}</span>
-                <div class="ml-auto">
+                <div class="ml-auto flex items-center gap-2">
                     <BranchSwitcher />
+                    <Link
+                        :href="route('notifications.index')"
+                        class="relative inline-flex size-11 items-center justify-center rounded-md hover:bg-accent sm:size-10"
+                        :aria-label="
+                            page.props.notifications.unread > 0
+                                ? $t('notifications.bell_unread', { count: String(page.props.notifications.unread) })
+                                : $t('notifications.title')
+                        "
+                    >
+                        <Bell class="size-5" aria-hidden="true" />
+                        <span
+                            v-if="page.props.notifications.unread > 0"
+                            class="absolute right-1 top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-xs font-semibold leading-5 text-destructive-foreground"
+                            aria-hidden="true"
+                        >
+                            {{ page.props.notifications.unread > 9 ? '9+' : page.props.notifications.unread }}
+                        </span>
+                    </Link>
                 </div>
             </header>
 

@@ -45,6 +45,9 @@ class HandleInertiaRequests extends Middleware
             'branches' => fn () => $context->hasTenant() && $request->user() instanceof User
                 ? $request->user()->accessibleBranches()->orderBy('name')->get(['id', 'name', 'code'])
                 : [],
+            'notifications' => fn () => [
+                'unread' => $request->user() instanceof User ? $request->user()->unreadNotifications()->count() : 0,
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

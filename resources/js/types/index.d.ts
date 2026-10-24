@@ -35,6 +35,7 @@ export interface SharedProps {
     tenant: TenantSummary | null;
     branch: BranchSummary | null;
     branches: BranchSummary[];
+    notifications: { unread: number };
     flash: FlashMessages;
     errors: Record<string, string>;
 }

@@ -6,12 +6,16 @@ use App\Enums\RoleName;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Mechanic;
+use App\Models\Part;
 use App\Models\ServiceItem;
+use App\Models\Supplier;
 use App\Models\Vehicle;
 use App\Services\Customers\VehicleService;
+use App\Services\Inventory\StockService;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
 use App\Services\Users\UserService;
+use App\Support\Quantity;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -64,10 +68,52 @@ class DemoSeeder extends Seeder
             $this->serviceCatalog();
             Mechanic::factory()->count(3)->create();
             Mechanic::factory()->inactive()->create();
+            $this->inventory();
         });
 
         $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
         $context->run($demo->tenant, $east, fn () => Mechanic::factory()->count(2)->create());
+    }
+
+    /**
+     * Example suppliers and parts with stock in the main branch; a few are below their
+     * threshold so the low-stock warnings show up.
+     */
+    private function inventory(): void
+    {
+        Supplier::factory()->count(3)->create();
+
+        $stock = app(StockService::class);
+        $parts = [
+            // [sku, name, brand, category, unit, cost, price, stock, threshold]
+            ['OLI-HLX-1040', 'Oli Shell Helix HX7 10W-40', 'Shell', 'Oli', 'liter', 62_000, 80_000, '24.5', '8'],
+            ['OLI-TOP-0W20', 'Oli Toyota Motor Oil 0W-20', 'Toyota', 'Oli', 'liter', 75_000, 95_000, '6', '8'],
+            ['FO-AVZ', 'Filter oli Avanza/Xenia', 'Aspira', 'Filter', 'pcs', 28_000, 40_000, '15', '5'],
+            ['FU-AVZ', 'Filter udara Avanza/Xenia', 'Aspira', 'Filter', 'pcs', 45_000, 65_000, '3', '4'],
+            ['KR-AVZ-D', 'Kampas rem depan Avanza', 'Bendix', 'Rem', 'set', 185_000, 250_000, '4', '2'],
+            ['BUSI-K16', 'Busi Denso K16TT', 'Denso', 'Kelistrikan', 'pcs', 25_000, 35_000, '32', '8'],
+            ['AKI-NS40', 'Aki GS Astra NS40ZL', 'GS Astra', 'Kelistrikan', 'pcs', 650_000, 780_000, '2', '2'],
+            ['MINYAK-REM', 'Minyak rem Prestone DOT 3', 'Prestone', 'Cairan', 'bottle', 28_000, 40_000, '10', '3'],
+            ['COOLANT-1L', 'Air radiator coolant', 'Prestone', 'Cairan', 'liter', 30_000, 45_000, '0', '3'],
+            ['V-BELT-AVZ', 'V-belt Avanza', 'Bando', 'Mesin', 'pcs', 95_000, 135_000, '5', '2'],
+        ];
+
+        foreach ($parts as [$sku, $name, $brand, $category, $unit, $cost, $price, $qty, $threshold]) {
+            $part = Part::query()->create([
+                'sku' => $sku,
+                'name' => $name,
+                'brand' => $brand,
+                'category' => $category,
+                'unit' => $unit,
+                'cost_price' => $cost,
+                'sell_price' => $price,
+            ]);
+
+            $stock->configure($part, Quantity::parse($threshold), null);
+            if ($qty !== '0') {
+                $stock->adjustTo($part, Quantity::parse($qty), __('stock.opening_balance'));
+            }
+        }
     }
 
     /**

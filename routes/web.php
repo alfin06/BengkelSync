@@ -8,9 +8,13 @@ use App\Http\Controllers\Customers\CustomerLookupController;
 use App\Http\Controllers\Customers\VehicleController;
 use App\Http\Controllers\Customers\VehicleOwnerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Inventory\PartController;
+use App\Http\Controllers\Inventory\PartStockController;
+use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mechanics\MechanicController;
 use App\Http\Controllers\Mechanics\MechanicKtpController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +52,17 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     // Mechanics of the active branch (no login)
     Route::resource('mechanics', MechanicController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::get('/mechanics/{mechanic}/ktp', MechanicKtpController::class)->name('mechanics.ktp');
+
+    // Inventory: tenant-wide parts catalog and suppliers, stock per active branch
+    Route::resource('parts', PartController::class);
+    Route::post('/parts/{part}/stock/adjust', [PartStockController::class, 'adjust'])->name('parts.stock.adjust');
+    Route::put('/parts/{part}/stock', [PartStockController::class, 'configure'])->name('parts.stock.configure');
+    Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // The user's own notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
 });
 
 require __DIR__.'/auth.php';

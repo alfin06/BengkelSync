@@ -160,6 +160,8 @@ return [
     // Custom rules
     'phone' => ':Attribute harus berupa nomor Indonesia yang valid, contoh: 0812-3456-7890.',
     'plate' => ':Attribute tidak valid. Contoh: B 1234 XYZ.',
+    'quantity' => ':Attribute harus berupa jumlah yang valid, misalnya 4 atau 4,2.',
+    'whole_quantity' => ':Attribute harus bilangan utuh untuk satuan :unit.',
 
     'custom' => [
         'nik' => ['regex' => 'NIK harus 16 digit angka.'],
@@ -197,5 +199,15 @@ return [
         'estimated_minutes' => 'perkiraan waktu',
         'nik' => 'NIK',
         'ktp' => 'foto KTP',
+        'sku' => 'SKU',
+        'brand' => 'merek',
+        'unit' => 'satuan',
+        'cost_price' => 'harga beli',
+        'sell_price' => 'harga jual',
+        'opening_stock' => 'stok awal',
+        'min_stock' => 'batas stok menipis',
+        'location' => 'lokasi rak',
+        'counted' => 'jumlah di rak',
+        'sales_name' => 'nama sales',
     ],
 ];

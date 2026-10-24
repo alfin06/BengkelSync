@@ -4,6 +4,8 @@
 return [
     'phone' => 'The :attribute must be a valid Indonesian phone number, e.g. 0812-3456-7890.',
     'plate' => 'The :attribute is not valid. Example: B 1234 XYZ.',
+    'quantity' => 'The :attribute must be a valid quantity, e.g. 4 or 4.2.',
+    'whole_quantity' => 'The :attribute must be a whole number for the unit :unit.',
 
     'custom' => [
         'nik' => ['regex' => 'The NIK must be 16 digits.'],
@@ -37,5 +39,15 @@ return [
         'estimated_minutes' => 'estimated time',
         'nik' => 'NIK',
         'ktp' => 'KTP photo',
+        'sku' => 'SKU',
+        'brand' => 'brand',
+        'unit' => 'unit',
+        'cost_price' => 'purchase cost',
+        'sell_price' => 'selling price',
+        'opening_stock' => 'opening stock',
+        'min_stock' => 'low-stock threshold',
+        'location' => 'shelf location',
+        'counted' => 'quantity on the shelf',
+        'sales_name' => 'sales contact',
     ],
 ];
