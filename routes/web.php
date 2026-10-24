@@ -11,6 +11,7 @@ use App\Http\Controllers\Customers\VehicleController;
 use App\Http\Controllers\Customers\VehicleOwnerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\PartController;
+use App\Http\Controllers\Inventory\PartLookupController;
 use App\Http\Controllers\Inventory\PartStockController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\LocaleController;
@@ -18,6 +19,9 @@ use App\Http\Controllers\Mechanics\MechanicController;
 use App\Http\Controllers\Mechanics\MechanicKtpController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Purchasing\PurchaseController;
+use App\Http\Controllers\Purchasing\SupplierDebtController;
+use App\Http\Controllers\Purchasing\SupplierPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -56,10 +60,18 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::get('/mechanics/{mechanic}/ktp', MechanicKtpController::class)->name('mechanics.ktp');
 
     // Inventory: tenant-wide parts catalog and suppliers, stock per active branch
+    Route::get('/parts/lookup', PartLookupController::class)->middleware('throttle:120,1')->name('parts.lookup');
     Route::resource('parts', PartController::class);
     Route::post('/parts/{part}/stock/adjust', [PartStockController::class, 'adjust'])->name('parts.stock.adjust');
     Route::put('/parts/{part}/stock', [PartStockController::class, 'configure'])->name('parts.stock.configure');
     Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Purchases from suppliers and supplier debt ("Hutang Supplier") of the active branch
+    Route::get('/supplier-debts', SupplierDebtController::class)->name('supplier-debts.index');
+    Route::resource('purchases', PurchaseController::class)->except(['destroy']);
+    Route::post('/purchases/{purchase}/void', [PurchaseController::class, 'void'])->name('purchases.void');
+    Route::post('/purchases/{purchase}/payments', [SupplierPaymentController::class, 'store'])->name('purchases.payments.store');
+    Route::post('/supplier-payments/{supplier_payment}/void', [SupplierPaymentController::class, 'void'])->name('supplier-payments.void');
 
     // Cash ("Kas") of the active branch
     Route::get('/cash', [CashController::class, 'index'])->name('cash.index');
@@ -73,6 +85,7 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
         Route::post('/accounts', 'storeAccount')->name('accounts.store');
         Route::put('/accounts/{cash_account}', 'updateAccount')->name('accounts.update');
         Route::delete('/accounts/{cash_account}', 'destroyAccount')->name('accounts.destroy');
+        Route::put('/cash-purchase-limit', 'updateCashPurchaseLimit')->name('cash-purchase-limit.update');
         Route::post('/methods', 'storeMethod')->name('methods.store');
         Route::put('/methods/{payment_method}', 'updateMethod')->name('methods.update');
         Route::delete('/methods/{payment_method}', 'destroyMethod')->name('methods.destroy');

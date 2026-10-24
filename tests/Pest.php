@@ -2,8 +2,14 @@
 
 use App\Enums\RoleName;
 use App\Models\Branch;
+use App\Models\CashAccount;
+use App\Models\Customer;
+use App\Models\Part;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Services\Customers\VehicleService;
+use App\Services\Inventory\StockService;
 use App\Services\Tenancy\ProvisionedTenant;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
@@ -124,5 +130,44 @@ function assertTenantIsolated(string $model, callable $make): void
 
         expect(fn () => (new $model)->forceFill($attributes)->save())
             ->toThrow(TenancyViolation::class);
+    });
+}
+
+/*
+|--------------------------------------------------------------------------
+| Model helpers shared by several test files
+|--------------------------------------------------------------------------
+*/
+
+function customerIn(ProvisionedTenant $shop, array $attributes = []): Customer
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => Customer::factory()->create($attributes));
+}
+
+function vehicleFor(ProvisionedTenant $shop, Customer $customer, array $attributes = []): Vehicle
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => app(VehicleService::class)
+        ->create($customer, [...Vehicle::factory()->raw(), ...$attributes]));
+}
+
+function partIn(ProvisionedTenant $shop, array $attributes = []): Part
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => Part::factory()->create($attributes));
+}
+
+/**
+ * Run StockService inside the shop's main branch.
+ */
+function stock(ProvisionedTenant $shop, callable $callback): mixed
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(StockService::class)));
+}
+
+function accountIn(ProvisionedTenant $shop, string $state = 'drawer', array $attributes = []): CashAccount
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => match ($state) {
+        'bank' => CashAccount::factory()->bank()->create($attributes),
+        'petty' => CashAccount::factory()->pettyCash()->create($attributes),
+        default => CashAccount::factory()->create($attributes),
     });
 }

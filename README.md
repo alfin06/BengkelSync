@@ -38,6 +38,10 @@ Requirements: PHP 8.3+, Composer, Node 22+, MySQL 8.
    ```bash
    composer dev
    ```
+6. Scheduled jobs (daily supplier-debt reminders) need Laravel's scheduler. On a server, add this cron entry; locally, run `php artisan schedule:work` when you need it:
+   ```
+   * * * * * cd /path/to/openbengkel && php artisan schedule:run >> /dev/null 2>&1
+   ```
 
 ### Demo accounts (local only)
 

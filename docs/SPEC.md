@@ -25,6 +25,7 @@ Actions: `view, create, update, delete`, plus:
 - `invoice.update` (edit an unpaid invoice), `invoice.update_paid` (edit an invoice with payments), `invoice.void`, `invoice.discount`, `invoice.toggle_tax`
 - `payment.update`, `payment.delete`
 - `stock.adjust`, `stock.transfer` (between branches)
+- `supplier_payment.on_receipt` (pay a purchase in full when it arrives, from the cash drawer or petty cash, up to the branch's cash purchase limit; for staff without `supplier_payment.create`)
 - `cash.transfer` (move money between cash accounts, e.g. topping up petty cash), `cash.adjust` (correct a balance after a cash count)
 - `dashboard.view_financials`
 - `audit_log.view` (read the audit log)
@@ -35,7 +36,7 @@ Default roles per tenant (the owner can edit them or add more in the permission 
 |---|---|
 | Owner (Pemilik) | everything; system role, cannot be deleted; at least one active owner must exist |
 | Branch Manager (Kepala Cabang) | everything within assigned branches except billing, roles, tenant settings |
-| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices, record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries), suppliers (view/create), cash (view) |
+| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices, record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries; pay small ones on the spot from cash with `supplier_payment.on_receipt`), suppliers (view/create), cash (view) |
 | Finance (Keuangan) | everything Front Desk has, plus mechanics (create/update incl. identity), invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, service and part prices (service create/update), stock adjust, financial dashboard, reports |
 | Warehouse (Gudang) | parts, stock, suppliers, purchases, transfers |
 
@@ -97,10 +98,13 @@ Status flow: `draft → queued → in_progress → waiting_parts → completed �
 **stock_movements** [branch]: part_id, type (purchase|work_order_use|invoice_edit|return|adjustment|transfer_in|transfer_out), qty (+/−, DECIMAL(12,2)), qty_after, unit_cost, reference_type, reference_id, note, created_by
 
 **Purchases and supplier debt.** Receiving goods from a supplier is a purchase. It can be paid immediately, partly, or later (hutang supplier).
-**purchases** [branch]: id, number (`PB`), supplier_id, supplier_ref (the supplier's own invoice number), purchase_date, due_date (nullable), total, amount_paid, status (unpaid|partial|paid|void), notes, created_by
+**purchases** [branch]: id, number (`PB`), supplier_id, supplier_ref (the supplier's own invoice number), purchase_date, due_date (nullable), total, amount_paid, status (unpaid|partial|paid|void), void_reason, notes, created_by, due_soon_notified_at, overdue_notified_at
 **purchase_lines**: purchase_id, part_id, qty, unit_cost, line_total. Saving a purchase writes `purchase` stock movements through `StockService` and updates `parts.cost_price` (weighted average, integer, rounded half-up).
-**supplier_payments** [branch]: purchase_id, paid_at, amount, cash_account_id, reference, paid_by, note. Writes a `supplier_payment` cash movement. Recalculates the purchase status.
-- Editing a purchase after saving needs `purchase.update` and a reason; line changes create stock movements for the difference and are written to the audit log.
+**supplier_payments** [branch]: purchase_id, paid_on, amount, cash_account_id, reference, paid_by, note, voided_at, void_reason, voided_by. Writes a `supplier_payment` cash movement. Recalculates the purchase status. A wrong payment is voided with a reason (`supplier_payment.delete`): the row is kept, a reversing cash movement puts the money back.
+- Editing a purchase after saving needs `purchase.update` and a reason; line changes create stock movements for the difference and are written to the audit log. The total cannot drop below what was already paid. A new due date re-arms the reminders.
+- Voiding a purchase (`purchase.delete`, with a reason) is only possible while nothing is paid, and takes its stock back out.
+- **Paying on the spot** (pilot decision): staff with `supplier_payment.on_receipt` but not `supplier_payment.create` may only pay the full amount, from the cash drawer or petty cash, when the total is at most `branches.cash_purchase_limit` (default Rp 500.000; empty = no limit; set in branch payment settings with `branch.update`). Larger bills are saved unpaid and go to supplier debt.
+- **Due reminders**: a daily job (`purchases:notify-due`, 07:00 Asia/Jakarta) sends a bell notification 3 days before the due date and one when a bill is overdue, once each, to active users of the branch with `supplier_payment.create`.
 
 **expense_categories**: id, name; **expenses** [branch]: date, category_id, description, amount, cash_account_id (which account paid; e.g. petty cash), attachment_path (private disk), created_by. Writes an `expense` cash movement.
 
@@ -209,7 +213,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Service catalog
 - [x] Mechanics (records without login; NIK encrypted, KTP on a private disk)
 - [x] Parts, branch stock, suppliers, StockService (stock in, adjust), low-stock notifications
-- [ ] Purchases with supplier debt and supplier payments
+- [x] Purchases with supplier debt and supplier payments
 - [x] Cash accounts, payment methods, CashService
 - [ ] Work orders with status flow, task checklist, and mechanic assignment
 - [ ] Invoices (from work order and walk-in), optional tax, print/PDF

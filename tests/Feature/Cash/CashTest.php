@@ -11,15 +11,6 @@ use App\Services\Tenancy\ProvisionedTenant;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-function accountIn(ProvisionedTenant $shop, string $state = 'drawer', array $attributes = []): CashAccount
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => match ($state) {
-        'bank' => CashAccount::factory()->bank()->create($attributes),
-        'petty' => CashAccount::factory()->pettyCash()->create($attributes),
-        default => CashAccount::factory()->create($attributes),
-    });
-}
-
 function cash(ProvisionedTenant $shop, callable $callback): mixed
 {
     return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(CashService::class)));

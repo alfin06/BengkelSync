@@ -104,4 +104,13 @@ final class TenantContext
     {
         return $this->branch ?? throw TenancyViolation::missingBranch();
     }
+
+    /**
+     * Today's date (Y-m-d) in the active branch's timezone (rule 11): 06:00 in Jakarta is
+     * still "today" there, although it is yesterday in UTC.
+     */
+    public function today(): string
+    {
+        return now($this->branch->timezone ?? 'Asia/Jakarta')->toDateString();
+    }
 }

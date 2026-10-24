@@ -2,21 +2,7 @@
 
 use App\Enums\RoleName;
 use App\Models\Customer;
-use App\Models\Vehicle;
-use App\Services\Customers\VehicleService;
-use App\Services\Tenancy\ProvisionedTenant;
 use Inertia\Testing\AssertableInertia as Assert;
-
-function customerIn(ProvisionedTenant $shop, array $attributes = []): Customer
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => Customer::factory()->create($attributes));
-}
-
-function vehicleFor(ProvisionedTenant $shop, Customer $customer, array $attributes = []): Vehicle
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => app(VehicleService::class)
-        ->create($customer, [...Vehicle::factory()->raw(), ...$attributes]));
-}
 
 function validCustomer(array $overrides = []): array
 {

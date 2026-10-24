@@ -75,6 +75,8 @@ enum Permission: string
     case SupplierPaymentCreate = 'supplier_payment.create';
     case SupplierPaymentUpdate = 'supplier_payment.update';
     case SupplierPaymentDelete = 'supplier_payment.delete';
+    // Pay a purchase in full when receiving it, from physical cash, up to the branch limit.
+    case SupplierPaymentOnReceipt = 'supplier_payment.on_receipt';
 
     case CashView = 'cash.view';
     case CashTransfer = 'cash.transfer';

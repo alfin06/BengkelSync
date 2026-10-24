@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $tax_rate
  * @property bool $tax_inclusive
  * @property string|null $invoice_footer
+ * @property int|null $cash_purchase_limit highest on-the-spot cash payment by Front Desk; null = no limit
  */
 class Branch extends Model
 {
@@ -50,6 +51,7 @@ class Branch extends Model
         'tax_rate',
         'tax_inclusive',
         'invoice_footer',
+        'cash_purchase_limit',
     ];
 
     /**
@@ -68,6 +70,7 @@ class Branch extends Model
         'tax_rate' => '11.00',
         'tax_inclusive' => false,
         'invoice_footer' => null,
+        'cash_purchase_limit' => null,
     ];
 
     protected function casts(): array
@@ -76,6 +79,7 @@ class Branch extends Model
             'tax_enabled' => 'boolean',
             'tax_rate' => 'decimal:2',
             'tax_inclusive' => 'boolean',
+            'cash_purchase_limit' => 'integer',
         ];
     }
 

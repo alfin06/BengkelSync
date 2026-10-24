@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CashSetupService
 {
+    public const DEFAULT_CASH_PURCHASE_LIMIT = 500_000;
+
     public function __construct(private readonly TenantContext $context) {}
 
     /**
@@ -26,7 +28,10 @@ class CashSetupService
      */
     public function provisionDefaults(Branch $branch): void
     {
-        $this->context->run($branch->tenant()->firstOrFail(), $branch, function (): void {
+        $this->context->run($branch->tenant()->firstOrFail(), $branch, function () use ($branch): void {
+            // Front Desk may pay small purchases on the spot up to this amount; owners change it in settings.
+            $branch->update(['cash_purchase_limit' => self::DEFAULT_CASH_PURCHASE_LIMIT]);
+
             $drawer = CashAccount::query()->create([
                 'name' => __('cash.defaults.cash_drawer'),
                 'type' => CashAccountType::CashDrawer,
@@ -46,6 +51,18 @@ class CashSetupService
                 'sort' => 1,
             ]);
         });
+    }
+
+    /**
+     * The highest purchase Front Desk may pay on the spot from cash (null = no limit).
+     * Branch is Auditable, so the change is logged.
+     */
+    public function updateCashPurchaseLimit(?int $limit): Branch
+    {
+        $branch = $this->context->requireBranch();
+        $branch->update(['cash_purchase_limit' => $limit]);
+
+        return $branch;
     }
 
     /**

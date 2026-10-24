@@ -10,6 +10,7 @@ import ConfirmDialog from '@/Components/ui/ConfirmDialog.vue';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import FormField from '@/Components/ui/FormField.vue';
 import { Input } from '@/Components/ui/input';
+import MoneyInput from '@/Components/ui/MoneyInput.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Select from '@/Components/ui/Select.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -21,7 +22,16 @@ const props = defineProps<{
     methods: PaymentMethodSetting[];
     accountTypes: SelectOption[];
     methodTypes: SelectOption[];
+    /** Highest purchase Front Desk may pay on the spot from cash; null = no limit */
+    cashPurchaseLimit: number | null;
 }>();
+
+// Front Desk's on-the-spot cash purchases
+const limitForm = useForm({ cash_purchase_limit: props.cashPurchaseLimit });
+
+function saveLimit(): void {
+    limitForm.put(route('settings.payments.cash-purchase-limit.update'), { preserveScroll: true, onSuccess: () => limitForm.defaults() });
+}
 
 // Cash accounts
 const accountOpen = ref(false);
@@ -268,6 +278,28 @@ function destroy(): void {
                 </form>
             </DialogContent>
         </Dialog>
+
+        <Card class="mt-6 lg:max-w-xl">
+            <CardHeader>
+                <CardTitle>{{ $t('payment_settings.cash_purchase_limit') }}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form class="grid gap-4 sm:flex sm:items-end" novalidate @submit.prevent="saveLimit">
+                    <FormField
+                        id="cash_purchase_limit"
+                        class="sm:flex-1"
+                        :label="$t('payment_settings.cash_purchase_limit_field')"
+                        :hint="$t('payment_settings.cash_purchase_limit_hint')"
+                        :error="limitForm.errors.cash_purchase_limit"
+                    >
+                        <template #default="{ invalid, describedBy }">
+                            <MoneyInput id="cash_purchase_limit" v-model="limitForm.cash_purchase_limit" :invalid="invalid" :aria-describedby="describedBy" />
+                        </template>
+                    </FormField>
+                    <Button type="submit" :loading="limitForm.processing" :disabled="!limitForm.isDirty">{{ $t('common.save') }}</Button>
+                </form>
+            </CardContent>
+        </Card>
 
         <ConfirmDialog
             v-model:open="confirmOpen"

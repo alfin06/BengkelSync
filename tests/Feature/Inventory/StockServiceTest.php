@@ -3,29 +3,14 @@
 use App\Enums\RoleName;
 use App\Enums\StockMovementType;
 use App\Exceptions\BusinessRuleViolation;
-use App\Models\Part;
 use App\Models\PartBranchStock;
 use App\Models\StockMovement;
 use App\Notifications\LowStockNotification;
 use App\Services\Inventory\StockService;
-use App\Services\Tenancy\ProvisionedTenant;
 use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-
-function partIn(ProvisionedTenant $shop, array $attributes = []): Part
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => Part::factory()->create($attributes));
-}
-
-/**
- * Run StockService inside the shop's main branch.
- */
-function stock(ProvisionedTenant $shop, callable $callback): mixed
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(StockService::class)));
-}
 
 it('adds and removes stock, writing one movement per change with the running balance', function () {
     $shop = provisionTenant();

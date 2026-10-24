@@ -86,6 +86,7 @@ enum RoleName: string
             Permission::StockView,
             Permission::PurchaseView,
             Permission::PurchaseCreate,
+            Permission::SupplierPaymentOnReceipt,
             Permission::SupplierView,
             Permission::SupplierCreate,
             Permission::CashView,

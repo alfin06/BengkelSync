@@ -142,14 +142,8 @@ class VehicleService
         return $data;
     }
 
-    /**
-     * Today's date in the active branch's timezone (rule 11): an owner change at 06:00 in
-     * Jakarta is still "today" there, although it is yesterday in UTC.
-     */
     private function today(): string
     {
-        $timezone = $this->context->branch()->timezone ?? 'Asia/Jakarta';
-
-        return now($timezone)->toDateString();
+        return $this->context->today();
     }
 }

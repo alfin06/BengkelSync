@@ -15,6 +15,8 @@ use App\Services\Cash\CashService;
 use App\Services\Cash\CashSetupService;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
+use App\Services\Purchasing\PurchaseService;
+use App\Services\Purchasing\SupplierPaymentService;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
 use App\Services\Users\UserService;
@@ -74,6 +76,7 @@ class DemoSeeder extends Seeder
             Mechanic::factory()->inactive()->create();
             $this->inventory();
             $this->cash();
+            $this->purchases();
         });
 
         $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
@@ -120,6 +123,50 @@ class DemoSeeder extends Seeder
         $cash->countTo($petty, 300_000, __('stock.opening_balance'));
         $cash->countTo($anton, 25_000_000, __('stock.opening_balance'));
         $cash->transfer($drawer, $petty, 200_000, 'Isi kas kecil');
+    }
+
+    /**
+     * Supplier bills in every state, so "Hutang Supplier" and the due reminders have
+     * something to show: paid on the spot, partly paid and due soon, overdue, not yet due.
+     */
+    private function purchases(): void
+    {
+        $purchases = app(PurchaseService::class);
+        $payments = app(SupplierPaymentService::class);
+        $today = now('Asia/Jakarta')->startOfDay();
+        [$first, $second, $third] = Supplier::query()->orderBy('id')->limit(3)->get()->all();
+        $part = fn (string $sku): int => Part::query()->where('sku', $sku)->value('id');
+        $drawer = CashAccount::query()->where('type', 'cash_drawer')->firstOrFail();
+        $bank = CashAccount::query()->where('name', 'BCA Anton')->firstOrFail();
+
+        $purchases->create($first, ['purchase_date' => $today->toDateString(), 'supplier_ref' => 'NT-0412'], [
+            ['part_id' => $part('BUSI-K16'), 'qty' => 400, 'unit_cost' => 25_000],
+        ], ['amount' => 100_000, 'account' => $drawer]);
+
+        $partial = $purchases->create($second, [
+            'purchase_date' => $today->copy()->subDays(12)->toDateString(),
+            'due_date' => $today->copy()->addDays(2)->toDateString(),
+            'supplier_ref' => 'INV/2026/1187',
+        ], [
+            ['part_id' => $part('OLI-HLX-1040'), 'qty' => 2000, 'unit_cost' => 62_000],
+            ['part_id' => $part('FO-AVZ'), 'qty' => 1000, 'unit_cost' => 28_000],
+        ]);
+        $payments->pay($partial, 800_000, $bank, $today->copy()->subDays(5), 'TRF-55120');
+
+        $purchases->create($third, [
+            'purchase_date' => $today->copy()->subDays(40)->toDateString(),
+            'due_date' => $today->copy()->subDays(10)->toDateString(),
+        ], [
+            ['part_id' => $part('AKI-NS40'), 'qty' => 200, 'unit_cost' => 650_000],
+        ]);
+
+        $purchases->create($first, [
+            'purchase_date' => $today->copy()->subDays(3)->toDateString(),
+            'due_date' => $today->copy()->addDays(25)->toDateString(),
+        ], [
+            ['part_id' => $part('KR-AVZ-D'), 'qty' => 400, 'unit_cost' => 185_000],
+            ['part_id' => $part('MINYAK-REM'), 'qty' => 600, 'unit_cost' => 28_000],
+        ]);
     }
 
     /**

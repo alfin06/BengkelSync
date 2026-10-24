@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\PartUnit;
 use App\Models\User;
+use App\Notifications\PurchaseDueNotification;
+use App\Support\Money;
 use App\Support\Quantity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,20 +62,60 @@ class NotificationController extends Controller
     {
         /** @var array<string, mixed> $data */
         $data = $notification->data;
-        $unit = PartUnit::tryFrom((string) ($data['unit'] ?? ''))?->label() ?? '';
+
+        [$title, $body, $url] = match ($data['kind'] ?? 'low_stock') {
+            PurchaseDueNotification::DUE_SOON, PurchaseDueNotification::OVERDUE => $this->purchaseDue($data),
+            default => $this->lowStock($data),
+        };
 
         return [
             'id' => $notification->id,
-            'title' => __('notifications.low_stock.title', ['part' => (string) ($data['part_name'] ?? '')]),
-            'body' => __('notifications.low_stock.body', [
+            'title' => $title,
+            'body' => $body,
+            'url' => $url,
+            'read' => $notification->read_at !== null,
+            'created_at_label' => $notification->created_at?->diffForHumans() ?? '',
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{string, string, string}
+     */
+    private function lowStock(array $data): array
+    {
+        $unit = PartUnit::tryFrom((string) ($data['unit'] ?? ''))?->label() ?? '';
+
+        return [
+            __('notifications.low_stock.title', ['part' => (string) ($data['part_name'] ?? '')]),
+            __('notifications.low_stock.body', [
                 'qty' => Quantity::format(Quantity::fromDecimal((string) ($data['qty'] ?? '0'))),
                 'threshold' => Quantity::format(Quantity::fromDecimal((string) ($data['threshold'] ?? '0'))),
                 'unit' => $unit,
                 'branch' => (string) ($data['branch_name'] ?? ''),
             ]),
-            'url' => route('parts.show', (int) ($data['part_id'] ?? 0)),
-            'read' => $notification->read_at !== null,
-            'created_at_label' => $notification->created_at?->diffForHumans() ?? '',
+            route('parts.show', (int) ($data['part_id'] ?? 0)),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{string, string, string}
+     */
+    private function purchaseDue(array $data): array
+    {
+        $key = $data['kind'] === PurchaseDueNotification::OVERDUE ? 'overdue' : 'due_soon';
+        $due = isset($data['due_date']) ? Carbon::parse((string) $data['due_date'])->translatedFormat('j M Y') : '';
+
+        return [
+            __("notifications.purchase_{$key}.title", ['supplier' => (string) ($data['supplier_name'] ?? '')]),
+            __("notifications.purchase_{$key}.body", [
+                'number' => (string) ($data['number'] ?? ''),
+                'amount' => Money::format((int) ($data['outstanding'] ?? 0)),
+                'date' => $due,
+                'branch' => (string) ($data['branch_name'] ?? ''),
+            ]),
+            route('purchases.show', (int) ($data['purchase_id'] ?? 0)),
         ];
     }
 }

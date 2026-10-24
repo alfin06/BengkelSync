@@ -6,10 +6,12 @@ use App\Enums\CashAccountType;
 use App\Enums\PaymentMethodType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cash\CashAccountRequest;
+use App\Http\Requests\Cash\CashPurchaseLimitRequest;
 use App\Http\Requests\Cash\PaymentMethodRequest;
 use App\Models\CashAccount;
 use App\Models\PaymentMethod;
 use App\Services\Cash\CashSetupService;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -22,7 +24,7 @@ class PaymentSettingsController extends Controller
 {
     public function __construct(private readonly CashSetupService $setup) {}
 
-    public function index(): Response
+    public function index(TenantContext $context): Response
     {
         Gate::authorize('viewAny', PaymentMethod::class);
 
@@ -48,6 +50,7 @@ class PaymentSettingsController extends Controller
                 'sort' => $method->sort,
             ]),
             'accountTypes' => array_map(fn (CashAccountType $type) => ['value' => $type->value, 'label' => $type->label()], CashAccountType::cases()),
+            'cashPurchaseLimit' => $context->requireBranch()->cash_purchase_limit,
             'methodTypes' => array_map(fn (PaymentMethodType $type) => ['value' => $type->value, 'label' => $type->label()], PaymentMethodType::cases()),
         ]);
     }
@@ -73,6 +76,13 @@ class PaymentSettingsController extends Controller
         $this->setup->deleteAccount($cashAccount);
 
         return back()->with('success', __('cash.account_deleted', ['name' => $cashAccount->name]));
+    }
+
+    public function updateCashPurchaseLimit(CashPurchaseLimitRequest $request): RedirectResponse
+    {
+        $this->setup->updateCashPurchaseLimit($request->filled('cash_purchase_limit') ? $request->integer('cash_purchase_limit') : null);
+
+        return back()->with('success', __('purchases.limit_saved'));
     }
 
     public function storeMethod(PaymentMethodRequest $request): RedirectResponse
