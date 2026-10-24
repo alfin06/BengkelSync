@@ -30,6 +30,7 @@ Actions: `view, create, update, delete`, plus:
 - `supplier_payment.on_receipt` (pay a purchase in full when it arrives, from the cash drawer or petty cash, up to the branch's cash purchase limit; for staff without `supplier_payment.create`)
 - `cash.transfer` (move money between cash accounts, e.g. topping up petty cash), `cash.adjust` (correct a balance after a cash count)
 - `dashboard.view_financials`
+- `dashboard.view_profit` (gross profit on the dashboard; it would reveal salaries, so Owner only by default)
 - `expense.create_cash` (record expenses only from the cash drawer or petty cash, up to the branch's Front Desk cash limit), `expense.view_restricted` (see and change expenses in restricted categories such as salaries; Owner only by default), `expense.manage_categories`
 - `audit_log.view` (read the audit log)
 - `billing.manage` (subscription, owner only)
@@ -158,6 +159,9 @@ Users with the right permission can edit any record, but every edit is traceable
 - **Auth**: sign up (create shop), login, forgot password, email verification, accept invitation.
 - **Branch switcher** in the header (only assigned branches) + "all branches" view for dashboards/reports when permitted.
 - **Dashboard**: work orders today by status, revenue today/this month, receivables, expenses, gross profit (revenue − parts cost − expenses), 12-month revenue chart, top services, top parts, low stock, mechanic workload. Filter by branch and date range. Financials need `dashboard.view_financials`.
+  - MVP (single branch): each section is sent only with its permission (workshop: `work_order.view`, low stock: `stock.view`, customer debt: `payment.view`, supplier bills due: `supplier_payment.view`, cash balances: as on the cash page). Period: today, this week, this month or a chosen range, in branch time.
+  - "Penjualan" = invoices of the period (not void) without tax; "Uang masuk" = payments received (not void) without card fees; card fees are shown apart and not counted (the bank fee eats them). Expenses exclude restricted categories for users without `expense.view_restricted`.
+  - Gross profit = sales − cost of the parts sold − all expenses (salaries included), only with `dashboard.view_profit` (Owner).
 - **Customers**, **Vehicles** (with service history across branches), **Work orders** (list + kanban), **Invoices** (list, detail, edit, revisions, payments, print/PDF, share via WhatsApp link), **Inventory** (parts, branch stock, stock in, adjustments, transfers, history, suppliers), **Expenses**, **Reports**.
 - **Payment dialog** ("Bayar"), used from the invoice page:
   - It opens with the outstanding amount prefilled on one line, using the default method (Tunai).
@@ -241,8 +245,8 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 
 ### MVP — Phase 2: Management
 - [x] Expenses + receipt upload (paid from a cash account, e.g. petty cash)
-- [ ] Petty cash: transfers between cash accounts, cash count / adjustment, balances on the dashboard
-- [ ] Dashboard (single branch view)
+- [x] Petty cash: transfers between cash accounts, cash count / adjustment, balances on the dashboard
+- [x] Dashboard (single branch view)
 - [x] User management (owner creates users with a password) + role/permission matrix UI
 - [ ] Shop & branch settings (profile, logo, tax, invoice footer)
 
@@ -284,6 +288,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Dashboard: sales and money received side by side; card fees not counted; gross profit only for the Owner (2026-10-24).
 - Expenses: Front Desk records small cash expenses up to the branch limit; "Gaji & bonus" is restricted to the Owner; categories are managed by Owner and Finance; no rent category (the shop owns its place) (2026-10-24).
 - Invoice editing: Front Desk may correct unpaid invoices; invoices with payments need Finance (`invoice.update_paid`) (2026-10-24).
 - Payments: a due date is required when part stays unpaid; customer debt list with reminders; kwitansi on A5; Finance may cancel single payment lines, never deleting them (2026-10-24).

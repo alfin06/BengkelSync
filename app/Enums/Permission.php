@@ -94,6 +94,8 @@ enum Permission: string
 
     case DashboardView = 'dashboard.view';
     case DashboardViewFinancials = 'dashboard.view_financials';
+    // Gross profit (it would reveal salaries); Owner only by default (pilot decision).
+    case DashboardViewProfit = 'dashboard.view_profit';
 
     case ReportView = 'report.view';
 

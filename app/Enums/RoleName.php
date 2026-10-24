@@ -48,6 +48,7 @@ enum RoleName: string
         return Permission::allExcept([
             Permission::BillingManage,
             Permission::ExpenseViewRestricted,
+            Permission::DashboardViewProfit,
             Permission::RoleView,
             Permission::RoleCreate,
             Permission::RoleUpdate,
