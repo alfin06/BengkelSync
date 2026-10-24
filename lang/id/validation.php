@@ -161,7 +161,9 @@ return [
     'phone' => ':Attribute harus berupa nomor Indonesia yang valid, contoh: 0812-3456-7890.',
     'plate' => ':Attribute tidak valid. Contoh: B 1234 XYZ.',
 
-    'custom' => [],
+    'custom' => [
+        'nik' => ['regex' => 'NIK harus 16 digit angka.'],
+    ],
 
     'attributes' => [
         'name' => 'nama',
@@ -193,5 +195,7 @@ return [
         'category' => 'kategori',
         'default_price' => 'harga',
         'estimated_minutes' => 'perkiraan waktu',
+        'nik' => 'NIK',
+        'ktp' => 'foto KTP',
     ],
 ];

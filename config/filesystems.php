@@ -16,6 +16,12 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
+    | Disk for sensitive uploads (KTP photos, receipts). Never a public disk: files are
+    | only served through authorized routes (SPEC section 8.2). Use an S3 disk in production.
+    */
+    'private_disk' => env('FILESYSTEM_PRIVATE_DISK', 'local'),
+
+    /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
@@ -33,7 +39,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Off: private files are served only by our own permission-checked routes.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

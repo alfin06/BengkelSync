@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\RoleName;
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\Mechanic;
 use App\Models\ServiceItem;
 use App\Models\Vehicle;
 use App\Services\Customers\VehicleService;
@@ -61,7 +62,12 @@ class DemoSeeder extends Seeder
         $context->run($demo->tenant, $demo->branch, function (): void {
             $this->customers();
             $this->serviceCatalog();
+            Mechanic::factory()->count(3)->create();
+            Mechanic::factory()->inactive()->create();
         });
+
+        $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
+        $context->run($demo->tenant, $east, fn () => Mechanic::factory()->count(2)->create());
     }
 
     /**

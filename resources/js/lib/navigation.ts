@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { ClipboardList, LayoutDashboard, UsersRound } from 'lucide-vue-next';
+import { ClipboardList, HardHat, LayoutDashboard, UsersRound } from 'lucide-vue-next';
 
 export interface NavItem {
     /** Translation key of the label */
@@ -41,6 +41,14 @@ export const navigation: NavItem[] = [
         activePattern: 'service-items.*',
         icon: ClipboardList,
         permission: 'service.view',
+        primary: false,
+    },
+    {
+        label: 'nav.mechanics',
+        route: 'mechanics.index',
+        activePattern: 'mechanics.*',
+        icon: HardHat,
+        permission: 'mechanic.view',
         primary: false,
     },
 ];

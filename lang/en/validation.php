@@ -5,6 +5,10 @@ return [
     'phone' => 'The :attribute must be a valid Indonesian phone number, e.g. 0812-3456-7890.',
     'plate' => 'The :attribute is not valid. Example: B 1234 XYZ.',
 
+    'custom' => [
+        'nik' => ['regex' => 'The NIK must be 16 digits.'],
+    ],
+
     'attributes' => [
         'phone' => 'mobile number',
         'locale' => 'language',
@@ -31,5 +35,7 @@ return [
         'category' => 'category',
         'default_price' => 'price',
         'estimated_minutes' => 'estimated time',
+        'nik' => 'NIK',
+        'ktp' => 'KTP photo',
     ],
 ];

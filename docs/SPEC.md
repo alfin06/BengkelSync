@@ -207,7 +207,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 ### MVP — Phase 1: Core operations
 - [x] Customers, vehicles, ownership history
 - [x] Service catalog
-- [ ] Mechanics (records without login; NIK encrypted, KTP on a private disk)
+- [x] Mechanics (records without login; NIK encrypted, KTP on a private disk)
 - [ ] Parts, branch stock, suppliers, StockService (stock in, adjust)
 - [ ] Purchases with supplier debt and supplier payments
 - [ ] Cash accounts, payment methods, CashService

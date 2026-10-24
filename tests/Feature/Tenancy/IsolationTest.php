@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\DocumentSequence;
+use App\Models\Mechanic;
 use App\Models\ServiceItem;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -52,6 +53,10 @@ it('isolates vehicle ownerships', function () {
 
 it('isolates service catalog items', function () {
     assertTenantIsolated(ServiceItem::class, fn (ProvisionedTenant $shop) => ServiceItem::factory()->create());
+});
+
+it('isolates mechanics', function () {
+    assertTenantIsolated(Mechanic::class, fn (ProvisionedTenant $shop) => Mechanic::factory()->create());
 });
 
 it('isolates document sequences', function () {

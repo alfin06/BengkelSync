@@ -9,6 +9,8 @@ use App\Http\Controllers\Customers\VehicleController;
 use App\Http\Controllers\Customers\VehicleOwnerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\Mechanics\MechanicController;
+use App\Http\Controllers\Mechanics\MechanicKtpController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +44,10 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
 
     // Service catalog (tenant-wide price list of jobs)
     Route::resource('service-items', ServiceItemController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Mechanics of the active branch (no login)
+    Route::resource('mechanics', MechanicController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::get('/mechanics/{mechanic}/ktp', MechanicKtpController::class)->name('mechanics.ktp');
 });
 
 require __DIR__.'/auth.php';
