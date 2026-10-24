@@ -9,6 +9,8 @@ enum StockMovementType: string
 {
     case Purchase = 'purchase';
     case WorkOrderUse = 'work_order_use';
+    // A part sold on a walk-in invoice (no work order).
+    case Sale = 'sale';
     case InvoiceEdit = 'invoice_edit';
     case Return = 'return';
     case Adjustment = 'adjustment';

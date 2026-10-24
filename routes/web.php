@@ -15,6 +15,7 @@ use App\Http\Controllers\Inventory\PartController;
 use App\Http\Controllers\Inventory\PartLookupController;
 use App\Http\Controllers\Inventory\PartStockController;
 use App\Http\Controllers\Inventory\SupplierController;
+use App\Http\Controllers\Invoicing\InvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mechanics\MechanicController;
 use App\Http\Controllers\Mechanics\MechanicKtpController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseController;
 use App\Http\Controllers\Purchasing\SupplierDebtController;
 use App\Http\Controllers\Purchasing\SupplierPaymentController;
+use App\Http\Controllers\Settings\InvoiceSettingsController;
 use App\Http\Controllers\WorkOrders\WorkOrderController;
 use App\Http\Controllers\WorkOrders\WorkOrderMechanicController;
 use App\Http\Controllers\WorkOrders\WorkOrderPartController;
@@ -79,6 +81,11 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
         Route::delete('/parts/{part}', [WorkOrderPartController::class, 'destroy'])->name('parts.destroy');
     });
 
+    // Invoices of the active branch: from a finished work order or a walk-in sale
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show']);
+    Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
+
     // Service catalog (tenant-wide price list of jobs)
     Route::resource('service-items', ServiceItemController::class)->only(['index', 'store', 'update', 'destroy']);
 
@@ -105,6 +112,10 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::post('/cash/transfer', [CashController::class, 'transfer'])->name('cash.transfer');
     Route::get('/cash/{cash_account}', [CashController::class, 'show'])->name('cash.show');
     Route::post('/cash/{cash_account}/count', [CashController::class, 'count'])->name('cash.count');
+
+    // Branch settings: tax on invoices and the invoice footer
+    Route::get('/settings/invoice', [InvoiceSettingsController::class, 'edit'])->name('settings.invoice.edit');
+    Route::put('/settings/invoice', [InvoiceSettingsController::class, 'update'])->name('settings.invoice.update');
 
     // Branch settings: cash accounts and payment methods
     Route::prefix('settings/payments')->name('settings.payments.')->controller(PaymentSettingsController::class)->group(function () {

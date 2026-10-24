@@ -140,6 +140,16 @@ class WorkOrder extends Model
     }
 
     /**
+     * Invoices made for this work order (at most one that is not cancelled).
+     *
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo

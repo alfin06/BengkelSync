@@ -36,7 +36,7 @@ Default roles per tenant (the owner can edit them or add more in the permission 
 |---|---|
 | Owner (Pemilik) | everything; system role, cannot be deleted; at least one active owner must exist |
 | Branch Manager (Kepala Cabang) | everything within assigned branches except billing, roles, tenant settings |
-| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices, record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries; pay small ones on the spot from cash with `supplier_payment.on_receipt`), suppliers (view/create), cash (view) |
+| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices incl. discounts (`invoice.discount`, pilot decision; to be made stricter later), record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries; pay small ones on the spot from cash with `supplier_payment.on_receipt`), suppliers (view/create), cash (view) |
 | Finance (Keuangan) | everything Front Desk has, plus mechanics (create/update incl. identity), invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, service and part prices (service create/update), stock adjust, financial dashboard, reports |
 | Warehouse (Gudang) | parts, stock, suppliers, purchases, transfers |
 
@@ -77,8 +77,12 @@ Status flow: `draft → queued → in_progress ⇄ waiting_parts → completed �
 **work_order_tasks**: work_order_id, description, is_done, sort (the front-desk checklist of what to check or do, e.g. "Cek bunyi kaki-kaki"; no price)
 **work_order_parts**: part_id, qty DECIMAL(12,2), unit_price, unit_cost (average cost when added), line_total, sort
 
-**invoices** [branch]: id, number, work_order_id (nullable, allows walk-in/parts-only sales), customer_id, issue_date, due_date, subtotal, discount_amount, tax_enabled, tax_rate, tax_inclusive, tax_amount, total, amount_paid, status (unpaid|partial|paid|void), void_reason, revision_no
-**invoice_lines**: invoice_id, type (service|part|other), part_id (nullable), description, qty, unit_price, discount_amount, line_total
+**invoices** [branch]: id, number, work_order_id (nullable, allows walk-in/parts-only sales), customer_id (nullable: "Pelanggan umum" for counter sales without a customer record), issue_date, due_date, subtotal, discount_amount, tax_enabled, tax_name, tax_rate, tax_inclusive, tax_amount, total, amount_paid, status (unpaid|partial|paid|void), void_reason, voided_at, voided_by, revision_no, notes, created_by
+**invoice_lines**: invoice_id, type (service|part|other), part_id (nullable), service_item_id (nullable), description, qty DECIMAL(12,2), unit_price, unit_cost (parts, for profit), discount_amount, line_total, mechanic_id (kept from the work order), sort
+- **From a work order**: only a `completed` work order, at most one invoice that is not void. Lines are copied with the work order's quantities (its parts already left the stock); prices and discounts can be adjusted per line. The work order becomes `invoiced` (lines locked).
+- **Walk-in sale**: any service, part and other lines; part lines leave the stock when the invoice is saved (`sale` stock movement).
+- **Void** (`invoice.void`, with a reason, only while nothing is paid): a work order goes back to `completed` (to correct and invoice again); a walk-in sale's parts go back to stock.
+- Printed on **A5**, plain black text and lines, for 2-ply paper on dot-matrix or laser printers (pilot decision).
 **invoice_revisions**: invoice_id, revision_no, snapshot (JSON of header + lines), reason, edited_by, created_at
 
 **Customer payments (several methods in one checkout).** A customer can pay one invoice with any mix of methods at once (e.g. Rp 500.000 cash + the rest by QRIS), and can pay in instalments over time.
@@ -119,7 +123,7 @@ Document numbers: `{BRANCH_CODE}/{TYPE}/{YYYY}/{NNNNN}`, e.g. `JKT1/INV/2026/000
 
 ## 5. Tax (optional)
 Many small bengkel are not PKP and must not charge PPN, so tax is fully optional.
-- **Branch setting**: `tax_enabled` (default **off**), `tax_name` (default "PPN"), `tax_rate` (default 11%, editable), `tax_inclusive` (prices include tax or tax is added on top). Set per branch, because branches can be separate legal entities.
+- **Branch setting**: `tax_enabled` (default **off**), `tax_name` (default "PPN"), `tax_rate` (default 11%, editable), `tax_inclusive` (prices include tax or tax is added on top). Set per branch, because branches can be separate legal entities. The branch manager changes them on the "Pajak & invoice" settings page (`branch.update`), together with the invoice footer.
 - **Per invoice**: new invoices copy the branch setting. A user with `invoice.toggle_tax` can turn tax on or off for a single invoice.
 - The rate and mode are **snapshotted on the invoice**, so changing branch settings later never changes existing invoices.
 - When tax is off, the invoice and print layout show no tax rows at all.
@@ -220,7 +224,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Purchases with supplier debt and supplier payments
 - [x] Cash accounts, payment methods, CashService
 - [x] Work orders with status flow, task checklist, and mechanic assignment
-- [ ] Invoices (from work order and walk-in), optional tax, print/PDF
+- [x] Invoices (from work order and walk-in), optional tax, print/PDF
 - [ ] Customer payments with several methods per checkout, card surcharge, kwitansi
 - [ ] Invoice editing with reason + revisions
 
@@ -269,6 +273,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Invoices: A5 on 2-ply paper; "Pelanggan umum" for counter sales; the branch manager decides whether invoices carry tax; Front Desk may give discounts for now (2026-10-24).
 - Work orders: parts leave stock when added; Front Desk and Finance type or change line prices; a draft status is kept for estimates; the job sheet (SPK) is printable (2026-10-24).
 - Supplier payables, petty cash, and customer payments with several methods in one checkout are in MVP scope (section 4).
 

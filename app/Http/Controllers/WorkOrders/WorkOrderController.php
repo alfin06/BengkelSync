@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\WorkOrders;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\Permission;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
@@ -9,6 +10,7 @@ use App\Http\Requests\WorkOrders\CheckInRequest;
 use App\Http\Requests\WorkOrders\UpdateWorkOrderRequest;
 use App\Http\Resources\WorkOrderResource;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Mechanic;
 use App\Models\ServiceItem;
 use App\Models\User;
@@ -114,7 +116,10 @@ class WorkOrderController extends Controller
                 ? ServiceItem::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'default_price'])
                 : [],
             'mechanics' => $canEditLines || $user->can('assign', $workOrder) ? $this->activeMechanics() : [],
+            // The invoice that is not cancelled, once the work order is invoiced.
+            'invoice' => $workOrder->invoices()->where('status', '!=', InvoiceStatus::Void)->first(['id', 'number'])?->only(['id', 'number']),
             'can' => [
+                'invoice' => $workOrder->status === WorkOrderStatus::Completed && $user->can('create', Invoice::class),
                 'update' => $user->can('update', $workOrder),
                 'editLines' => $canEditLines,
                 'assign' => $user->can('assign', $workOrder),

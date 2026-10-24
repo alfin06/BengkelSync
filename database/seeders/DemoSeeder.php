@@ -12,10 +12,12 @@ use App\Models\Part;
 use App\Models\ServiceItem;
 use App\Models\Supplier;
 use App\Models\Vehicle;
+use App\Models\WorkOrder;
 use App\Services\Cash\CashService;
 use App\Services\Cash\CashSetupService;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
+use App\Services\Invoicing\InvoiceService;
 use App\Services\Purchasing\PurchaseService;
 use App\Services\Purchasing\SupplierPaymentService;
 use App\Services\Tenancy\TenantProvisioner;
@@ -80,6 +82,7 @@ class DemoSeeder extends Seeder
             $this->cash();
             $this->purchases();
             $this->workOrders();
+            $this->invoices();
         });
 
         $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
@@ -126,6 +129,27 @@ class DemoSeeder extends Seeder
         $cash->countTo($petty, 300_000, __('stock.opening_balance'));
         $cash->countTo($anton, 25_000_000, __('stock.opening_balance'));
         $cash->transfer($drawer, $petty, 200_000, 'Isi kas kecil');
+    }
+
+    /**
+     * The finished work order invoiced with a small discount, and a counter sale of oil to
+     * a walk-in customer ("Pelanggan umum").
+     */
+    private function invoices(): void
+    {
+        $invoices = app(InvoiceService::class);
+        $today = now('Asia/Jakarta')->toDateString();
+
+        $done = WorkOrder::query()->with(['services', 'parts'])->where('status', WorkOrderStatus::Completed)->firstOrFail();
+        $invoices->createFromWorkOrder($done, ['issue_date' => $today, 'discount_amount' => 10_000], [
+            ...$done->services->map(fn ($line) => ['source' => 'service', 'id' => $line->id, 'unit_price' => $line->unit_price])->all(),
+            ...$done->parts->map(fn ($line) => ['source' => 'part', 'id' => $line->id, 'unit_price' => $line->unit_price])->all(),
+        ]);
+
+        $oil = Part::query()->where('sku', 'OLI-HLX-1040')->firstOrFail();
+        $invoices->createWalkIn(null, ['issue_date' => $today], [
+            ['type' => 'part', 'part_id' => $oil->id, 'qty' => 100, 'unit_price' => $oil->sell_price],
+        ]);
     }
 
     /**

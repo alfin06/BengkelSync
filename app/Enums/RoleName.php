@@ -79,6 +79,8 @@ enum RoleName: string
             Permission::WorkOrderChangeStatus,
             Permission::InvoiceView,
             Permission::InvoiceCreate,
+            // Pilot decision: Front Desk may give discounts for now; to be made stricter later.
+            Permission::InvoiceDiscount,
             Permission::PaymentView,
             Permission::PaymentCreate,
             Permission::PartView,
@@ -109,7 +111,6 @@ enum RoleName: string
             Permission::InvoiceUpdate,
             Permission::InvoiceUpdatePaid,
             Permission::InvoiceVoid,
-            Permission::InvoiceDiscount,
             Permission::InvoiceToggleTax,
             Permission::PaymentUpdate,
             Permission::PaymentDelete,

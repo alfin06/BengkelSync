@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { ClipboardList, HandCoins, Wrench, HardHat, LayoutDashboard, Package, ReceiptText, Settings, Truck, UsersRound, Wallet } from 'lucide-vue-next';
+import { ClipboardList, FileText, HandCoins, Receipt, Wrench, HardHat, LayoutDashboard, Package, ReceiptText, Settings, Truck, UsersRound, Wallet } from 'lucide-vue-next';
 
 export interface NavItem {
     /** Translation key of the label */
@@ -34,6 +34,14 @@ export const navigation: NavItem[] = [
         icon: Wrench,
         permission: 'work_order.view',
         primary: true,
+    },
+    {
+        label: 'nav.invoices',
+        route: 'invoices.index',
+        activePattern: 'invoices.*',
+        icon: FileText,
+        permission: 'invoice.view',
+        primary: false,
     },
     {
         label: 'nav.customers',
@@ -97,6 +105,14 @@ export const navigation: NavItem[] = [
         activePattern: 'mechanics.*',
         icon: HardHat,
         permission: 'mechanic.view',
+        primary: false,
+    },
+    {
+        label: 'nav.invoice_settings',
+        route: 'settings.invoice.edit',
+        activePattern: 'settings.invoice.*',
+        icon: Receipt,
+        permission: 'branch.update',
         primary: false,
     },
     {

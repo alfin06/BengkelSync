@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, useForm } from '@inertiajs/vue3';
-import { Ban, Pencil, Plus, Printer, Users, X } from 'lucide-vue-next';
+import { Ban, FileText, Pencil, Plus, Printer, Users, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import MechanicToggles from '@/Components/WorkOrders/MechanicToggles.vue';
 import PartLineDialog from '@/Components/WorkOrders/PartLineDialog.vue';
@@ -24,7 +24,9 @@ const props = defineProps<{
     nextStatuses: { value: string; label: string }[];
     catalog: CatalogOption[];
     mechanics: MechanicOption[];
-    can: { update: boolean; editLines: boolean; assign: boolean; cancel: boolean };
+    /** The invoice of this work order, once invoiced */
+    invoice: { id: number; number: string } | null;
+    can: { invoice: boolean; update: boolean; editLines: boolean; assign: boolean; cancel: boolean };
 }>();
 
 // Status buttons: the first next step is the main action ("Mulai kerjakan", "Selesai").
@@ -116,6 +118,12 @@ const hasParts = computed(() => (props.workOrder.parts ?? []).length > 0);
     <AppLayout>
         <PageHeader :title="workOrder.vehicle.plate_number" :description="`${workOrder.number} · ${workOrder.vehicle.name}`">
             <template #actions>
+                <Link v-if="can.invoice" :href="route('invoices.create', { work_order: workOrder.id })" :class="buttonVariants()">
+                    <FileText aria-hidden="true" /> {{ $t('invoices.create_button') }}
+                </Link>
+                <Link v-if="invoice" :href="route('invoices.show', invoice.id)" :class="buttonVariants({ variant: 'outline' })">
+                    <FileText aria-hidden="true" /> {{ invoice.number }}
+                </Link>
                 <a :href="route('work-orders.print', workOrder.id)" target="_blank" rel="noopener" :class="buttonVariants({ variant: 'outline' })">
                     <Printer aria-hidden="true" /> {{ $t('work_orders.print') }}
                 </a>

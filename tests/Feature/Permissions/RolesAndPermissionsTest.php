@@ -42,8 +42,9 @@ it('grants the default permissions per role', function (RoleName $role, array $a
 })->with([
     'front desk' => [
         RoleName::FrontDesk,
-        [PermissionName::CustomerCreate, PermissionName::WorkOrderAssign, PermissionName::PaymentCreate, PermissionName::PurchaseCreate],
-        [PermissionName::InvoiceVoid, PermissionName::InvoiceDiscount, PermissionName::CashTransfer, PermissionName::MechanicViewIdentity, PermissionName::DashboardViewFinancials, PermissionName::UserCreate],
+        // invoice.discount: pilot decision (Front Desk may give discounts for now).
+        [PermissionName::CustomerCreate, PermissionName::WorkOrderAssign, PermissionName::PaymentCreate, PermissionName::PurchaseCreate, PermissionName::InvoiceDiscount],
+        [PermissionName::InvoiceVoid, PermissionName::InvoiceToggleTax, PermissionName::CashTransfer, PermissionName::MechanicViewIdentity, PermissionName::DashboardViewFinancials, PermissionName::UserCreate],
     ],
     'finance' => [
         RoleName::Finance,

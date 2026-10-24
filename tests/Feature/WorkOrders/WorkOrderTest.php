@@ -1,12 +1,10 @@
 <?php
 
 use App\Enums\RoleName;
-use App\Enums\StockMovementType;
 use App\Enums\WorkOrderStatus;
 use App\Exceptions\BusinessRuleViolation;
 use App\Models\AuditLog;
 use App\Models\Customer;
-use App\Models\Part;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderPart;
@@ -19,37 +17,6 @@ use App\Services\Tenancy\ProvisionedTenant;
 use App\Services\WorkOrders\WorkOrderService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
-
-/**
- * Run WorkOrderService inside the shop's main branch.
- */
-function workOrders(ProvisionedTenant $shop, callable $callback): mixed
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(WorkOrderService::class)));
-}
-
-/**
- * A queued work order for a fresh customer's vehicle (last odometer 40.000 km).
- */
-function workOrderIn(ProvisionedTenant $shop, ?Vehicle $vehicle = null): WorkOrder
-{
-    $vehicle ??= vehicleFor($shop, customerIn($shop), ['last_odometer' => 40_000]);
-
-    return workOrders($shop, fn (WorkOrderService $service) => $service->checkIn($vehicle, ['complaint' => 'Rem bunyi', 'odometer_in' => 41_000]));
-}
-
-/**
- * A part with stock on the shelf of the shop's main branch.
- *
- * @param  int  $qty  hundredths
- */
-function stockedPart(ProvisionedTenant $shop, int $qty = 1000, array $attributes = []): Part
-{
-    $part = partIn($shop, ['sell_price' => 50_000, 'cost_price' => 35_000, ...$attributes]);
-    stock($shop, fn (StockService $stock) => $stock->move($part, StockMovementType::Adjustment, $qty));
-
-    return $part;
-}
 
 describe('check-in', function () {
     it('numbers the work order, takes the owner from the vehicle and keeps the checklist and mechanics', function () {
