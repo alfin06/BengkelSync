@@ -8,6 +8,7 @@ use App\Http\Controllers\Catalog\ServiceItemController;
 use App\Http\Controllers\Customers\CustomerController;
 use App\Http\Controllers\Customers\CustomerLookupController;
 use App\Http\Controllers\Customers\VehicleController;
+use App\Http\Controllers\Customers\VehicleLookupController;
 use App\Http\Controllers\Customers\VehicleOwnerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\PartController;
@@ -22,6 +23,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseController;
 use App\Http\Controllers\Purchasing\SupplierDebtController;
 use App\Http\Controllers\Purchasing\SupplierPaymentController;
+use App\Http\Controllers\WorkOrders\WorkOrderController;
+use App\Http\Controllers\WorkOrders\WorkOrderMechanicController;
+use App\Http\Controllers\WorkOrders\WorkOrderPartController;
+use App\Http\Controllers\WorkOrders\WorkOrderServiceLineController;
+use App\Http\Controllers\WorkOrders\WorkOrderStatusController;
+use App\Http\Controllers\WorkOrders\WorkOrderTaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -47,10 +54,30 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::get('/customers/lookup/search', [CustomerLookupController::class, 'search'])->name('customers.lookup.search');
     Route::resource('customers', CustomerController::class);
 
+    Route::get('/vehicles/lookup', VehicleLookupController::class)->middleware('throttle:120,1')->name('vehicles.lookup');
     Route::get('/customers/{customer}/vehicles/create', [VehicleController::class, 'create'])->name('vehicles.create');
     Route::post('/customers/{customer}/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
     Route::resource('vehicles', VehicleController::class)->only(['show', 'edit', 'update', 'destroy']);
     Route::put('/vehicles/{vehicle}/owner', [VehicleOwnerController::class, 'update'])->name('vehicles.owner.update');
+
+    // Work orders ("SPK") of the active branch. Lines are bound through their work order
+    // (scoped bindings), so a line of another branch's work order is a 404.
+    Route::resource('work-orders', WorkOrderController::class)->only(['index', 'create', 'store', 'show', 'update']);
+    Route::get('/work-orders/{work_order}/print', [WorkOrderController::class, 'print'])->name('work-orders.print');
+    Route::put('/work-orders/{work_order}/status', [WorkOrderStatusController::class, 'update'])->name('work-orders.status');
+    Route::post('/work-orders/{work_order}/cancel', [WorkOrderStatusController::class, 'cancel'])->name('work-orders.cancel');
+    Route::put('/work-orders/{work_order}/mechanics', [WorkOrderMechanicController::class, 'update'])->name('work-orders.mechanics');
+    Route::scopeBindings()->prefix('work-orders/{work_order}')->name('work-orders.')->group(function () {
+        Route::post('/tasks', [WorkOrderTaskController::class, 'store'])->name('tasks.store');
+        Route::put('/tasks/{task}', [WorkOrderTaskController::class, 'update'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [WorkOrderTaskController::class, 'destroy'])->name('tasks.destroy');
+        Route::post('/services', [WorkOrderServiceLineController::class, 'store'])->name('services.store');
+        Route::put('/services/{service}', [WorkOrderServiceLineController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [WorkOrderServiceLineController::class, 'destroy'])->name('services.destroy');
+        Route::post('/parts', [WorkOrderPartController::class, 'store'])->name('parts.store');
+        Route::put('/parts/{part}', [WorkOrderPartController::class, 'update'])->name('parts.update');
+        Route::delete('/parts/{part}', [WorkOrderPartController::class, 'destroy'])->name('parts.destroy');
+    });
 
     // Service catalog (tenant-wide price list of jobs)
     Route::resource('service-items', ServiceItemController::class)->only(['index', 'store', 'update', 'destroy']);

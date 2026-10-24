@@ -101,6 +101,17 @@ class Vehicle extends Model
         return $this->hasMany(VehicleOwnership::class);
     }
 
+    /**
+     * Work orders of the active branch (the branch scope applies). Service history across
+     * branches lifts only that scope, see VehicleController::show().
+     *
+     * @return HasMany<WorkOrder, $this>
+     */
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class);
+    }
+
     public function displayName(): string
     {
         return trim("{$this->make} {$this->model}".($this->year ? " ({$this->year})" : ''));

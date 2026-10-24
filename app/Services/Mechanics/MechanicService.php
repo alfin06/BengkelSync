@@ -4,6 +4,7 @@ namespace App\Services\Mechanics;
 
 use App\Exceptions\BusinessRuleViolation;
 use App\Models\Mechanic;
+use App\Models\WorkOrderServiceLine;
 use App\Support\Phone;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -71,12 +72,12 @@ class MechanicService
     }
 
     /**
-     * Work orders (SPEC section 4, work_order_mechanic) will reference mechanics. That table
-     * does not exist yet, so no mechanic is used.
+     * A mechanic who worked on a job stays in its history: deactivate instead of deleting.
      */
     public function isUsed(Mechanic $mechanic): bool
     {
-        return false;
+        return DB::table('work_order_mechanic')->where('mechanic_id', $mechanic->id)->exists()
+            || WorkOrderServiceLine::query()->where('mechanic_id', $mechanic->id)->exists();
     }
 
     /**

@@ -4,7 +4,9 @@ use App\Enums\RoleName;
 use App\Models\Branch;
 use App\Models\CashAccount;
 use App\Models\Customer;
+use App\Models\Mechanic;
 use App\Models\Part;
+use App\Models\ServiceItem;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -170,4 +172,14 @@ function accountIn(ProvisionedTenant $shop, string $state = 'drawer', array $att
         'petty' => CashAccount::factory()->pettyCash()->create($attributes),
         default => CashAccount::factory()->create($attributes),
     });
+}
+
+function mechanicIn(ProvisionedTenant $shop, ?Branch $branch = null, array $attributes = []): Mechanic
+{
+    return inTenant($shop->tenant, $branch ?? $shop->branch, fn () => Mechanic::factory()->create($attributes));
+}
+
+function serviceIn(ProvisionedTenant $shop, array $attributes = []): ServiceItem
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => ServiceItem::factory()->create($attributes));
 }

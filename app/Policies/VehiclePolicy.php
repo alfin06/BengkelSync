@@ -8,6 +8,14 @@ use App\Models\Vehicle;
 
 class VehiclePolicy
 {
+    /**
+     * Searching vehicles (the plate lookup at check-in).
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->can(Permission::VehicleView->value);
+    }
+
     public function view(User $user, Vehicle $vehicle): bool
     {
         return $user->can(Permission::VehicleView->value);

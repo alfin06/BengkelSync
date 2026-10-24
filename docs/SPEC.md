@@ -66,12 +66,16 @@ All tables below have `tenant_id` unless marked [global]. [branch] = also has `b
 
 **service_items** (the service catalog): id, code (optional, unique per tenant), name, category (optional), default_price, estimated_minutes, is_active (tenant-wide; same price in all branches). Used jobs cannot be deleted, only deactivated.
 
-**work_orders** [branch]: id, number, vehicle_id, customer_id, status, complaint, diagnosis, odometer_in, estimated_completion, started_at, completed_at, notes, created_by
-Status flow: `draft → queued → in_progress → waiting_parts → completed → invoiced → closed`; `cancelled` from any state before `invoiced`.
+**work_orders** [branch]: id, number, vehicle_id, customer_id, status, complaint, diagnosis, odometer_in, estimated_completion, started_at, completed_at, cancel_reason, notes, created_by
+Status flow: `draft → queued → in_progress ⇄ waiting_parts → completed → invoiced → closed`; `cancelled` from any state before `invoiced` (with a reason). A quick job may go from `queued` straight to `completed`, and `completed` can be reopened to `in_progress` until an invoice exists. `invoiced` and `closed` are set by the invoice module only (closed when the invoice is fully paid). `started_at` is set on the first start, `completed_at` on completion.
+- **Parts leave the branch stock when added to a work order** (`work_order_use` movement); an out-of-stock part cannot be added. Removing a part, lowering its quantity, or cancelling the work order puts it back (pilot decision).
+- **Prices on work order lines** are typed or prefilled (catalog default price, part sell price) and can be changed by staff with `work_order.update` (Front Desk and Finance). They are kept on the line, so later price changes do not affect open jobs.
+- Services, parts and the checklist can change until the work order is invoiced. The odometer reading raises `vehicles.last_odometer` (never lowers it; the form warns about a lower reading).
+- The printable job sheet (SPK) for the mechanic's bay shows the vehicle, complaint, checklist, services, parts and mechanics, without prices.
 **mechanics** [branch]: id, name, phone, nik (encrypted at rest; shown only with `mechanic.view_identity`), ktp_path (private disk, served only through an authorized download), is_active, notes, deleted_at. Mechanics have no login.
-**work_order_mechanic** pivot (work_order_id, mechanic_id); **work_order_services**: description, service_item_id (nullable → service_items), qty, unit_price, mechanic_id (nullable → mechanics)
+**work_order_mechanic** pivot (work_order_id, mechanic_id); **work_order_services**: description, service_item_id (nullable → service_items), qty, unit_price, line_total, mechanic_id (nullable → mechanics; picking one adds the mechanic to the job), sort
 **work_order_tasks**: work_order_id, description, is_done, sort (the front-desk checklist of what to check or do, e.g. "Cek bunyi kaki-kaki"; no price)
-**work_order_parts**: part_id, qty, unit_price, unit_cost (snapshots)
+**work_order_parts**: part_id, qty DECIMAL(12,2), unit_price, unit_cost (average cost when added), line_total, sort
 
 **invoices** [branch]: id, number, work_order_id (nullable, allows walk-in/parts-only sales), customer_id, issue_date, due_date, subtotal, discount_amount, tax_enabled, tax_rate, tax_inclusive, tax_amount, total, amount_paid, status (unpaid|partial|paid|void), void_reason, revision_no
 **invoice_lines**: invoice_id, type (service|part|other), part_id (nullable), description, qty, unit_price, discount_amount, line_total
@@ -215,7 +219,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Parts, branch stock, suppliers, StockService (stock in, adjust), low-stock notifications
 - [x] Purchases with supplier debt and supplier payments
 - [x] Cash accounts, payment methods, CashService
-- [ ] Work orders with status flow, task checklist, and mechanic assignment
+- [x] Work orders with status flow, task checklist, and mechanic assignment
 - [ ] Invoices (from work order and walk-in), optional tax, print/PDF
 - [ ] Customer payments with several methods per checkout, card surcharge, kwitansi
 - [ ] Invoice editing with reason + revisions
@@ -265,6 +269,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Work orders: parts leave stock when added; Front Desk and Finance type or change line prices; a draft status is kept for estimates; the job sheet (SPK) is printable (2026-10-24).
 - Supplier payables, petty cash, and customer payments with several methods in one checkout are in MVP scope (section 4).
 
 ## 12. Open questions

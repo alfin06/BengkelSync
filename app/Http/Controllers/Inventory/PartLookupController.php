@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Part;
+use App\Models\PartBranchStock;
+use App\Support\Quantity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -29,13 +31,23 @@ class PartLookupController extends Controller
             ->limit(10)
             ->get();
 
-        return response()->json($parts->map(fn (Part $part) => [
-            'id' => $part->id,
-            'name' => $part->name,
-            'sku' => $part->sku,
-            'unit_label' => $part->unit->label(),
-            'allows_decimals' => $part->unit->allowsDecimals(),
-            'cost_price' => $canSeeCost ? $part->cost_price : null,
-        ]));
+        // Stock of the active branch (branch-scoped), so work orders can show what is left.
+        $stock = PartBranchStock::query()->whereIn('part_id', $parts->pluck('id'))->get()->keyBy('part_id');
+
+        return response()->json($parts->map(function (Part $part) use ($canSeeCost, $stock) {
+            $available = $stock->get($part->id)?->qtyHundredths() ?? 0;
+
+            return [
+                'id' => $part->id,
+                'name' => $part->name,
+                'sku' => $part->sku,
+                'unit_label' => $part->unit->label(),
+                'allows_decimals' => $part->unit->allowsDecimals(),
+                'cost_price' => $canSeeCost ? $part->cost_price : null,
+                'sell_price' => $part->sell_price,
+                'available' => $available,
+                'available_label' => Quantity::format($available),
+            ];
+        }));
     }
 }

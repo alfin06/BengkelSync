@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { ClipboardList, HandCoins, HardHat, LayoutDashboard, Package, ReceiptText, Settings, Truck, UsersRound, Wallet } from 'lucide-vue-next';
+import { ClipboardList, HandCoins, Wrench, HardHat, LayoutDashboard, Package, ReceiptText, Settings, Truck, UsersRound, Wallet } from 'lucide-vue-next';
 
 export interface NavItem {
     /** Translation key of the label */
@@ -25,6 +25,14 @@ export const navigation: NavItem[] = [
         activePattern: 'dashboard',
         icon: LayoutDashboard,
         permission: null,
+        primary: true,
+    },
+    {
+        label: 'nav.work_orders',
+        route: 'work-orders.index',
+        activePattern: 'work-orders.*',
+        icon: Wrench,
+        permission: 'work_order.view',
         primary: true,
     },
     {

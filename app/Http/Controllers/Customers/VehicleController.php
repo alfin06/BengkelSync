@@ -12,7 +12,11 @@ use App\Http\Resources\VehicleResource;
 use App\Models\Customer;
 use App\Models\Vehicle;
 use App\Models\VehicleOwnership;
+use App\Models\WorkOrder;
 use App\Services\Customers\VehicleService;
+use App\Support\BranchTime;
+use App\Support\Tenancy\BranchScope;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -57,12 +61,46 @@ class VehicleController extends Controller
                 'ended_on' => $ownership->ended_on?->toDateString(),
                 'reason' => $ownership->reason,
             ]),
+            'history' => $user?->can('viewAny', WorkOrder::class) ? $this->serviceHistory($vehicle) : [],
             'can' => [
                 'update' => $user?->can('update', $vehicle) ?? false,
                 'delete' => $user?->can('delete', $vehicle) ?? false,
                 'changeOwner' => $user?->can('changeOwner', $vehicle) ?? false,
+                'checkIn' => $user?->can('create', WorkOrder::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Service history across all branches of the tenant (SPEC section 7): only the branch
+     * scope is lifted, never the tenant scope. Work orders of other branches are listed
+     * without a link, since they can only be opened in their own branch.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function serviceHistory(Vehicle $vehicle): array
+    {
+        $activeBranch = app(TenantContext::class)->branchId();
+
+        return WorkOrder::query()
+            ->withoutGlobalScope(BranchScope::class)
+            ->with('branch')
+            ->where('vehicle_id', $vehicle->id)
+            ->latest('id')
+            ->limit(20)
+            ->get()
+            ->map(fn (WorkOrder $workOrder) => [
+                'id' => $workOrder->id,
+                'number' => $workOrder->number,
+                'date_label' => BranchTime::label($workOrder->created_at, 'j M Y'),
+                'complaint' => $workOrder->complaint,
+                'odometer_in' => $workOrder->odometer_in,
+                'status' => $workOrder->status->value,
+                'status_label' => $workOrder->status->label(),
+                'branch_name' => $workOrder->branch->name,
+                'in_branch' => $workOrder->branch_id === $activeBranch,
+            ])
+            ->all();
     }
 
     public function edit(Vehicle $vehicle): Response

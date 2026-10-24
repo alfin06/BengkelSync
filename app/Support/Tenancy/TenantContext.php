@@ -111,6 +111,14 @@ final class TenantContext
      */
     public function today(): string
     {
-        return now($this->branch->timezone ?? 'Asia/Jakarta')->toDateString();
+        return now($this->timezone())->toDateString();
+    }
+
+    /**
+     * The active branch's timezone, for showing stored UTC times and reading typed ones.
+     */
+    public function timezone(): string
+    {
+        return $this->branch->timezone ?? 'Asia/Jakarta';
     }
 }

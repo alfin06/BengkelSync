@@ -3,13 +3,7 @@
 use App\Enums\RoleName;
 use App\Models\AuditLog;
 use App\Models\ServiceItem;
-use App\Services\Tenancy\ProvisionedTenant;
 use Inertia\Testing\AssertableInertia as Assert;
-
-function serviceIn(ProvisionedTenant $shop, array $attributes = []): ServiceItem
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => ServiceItem::factory()->create($attributes));
-}
 
 function validService(array $overrides = []): array
 {

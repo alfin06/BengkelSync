@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, router, useForm } from '@inertiajs/vue3';
-import { ArrowLeftRight, Pencil, Trash2, UserRound } from 'lucide-vue-next';
+import { ArrowLeftRight, ClipboardPlus, Pencil, Trash2, UserRound } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import CustomerPicker from '@/Components/Customers/CustomerPicker.vue';
+import WorkOrderStatusBadge from '@/Components/WorkOrders/WorkOrderStatusBadge.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Button, buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -14,11 +15,14 @@ import Textarea from '@/Components/ui/Textarea.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { formatDate, formatNumber } from '@/lib/format';
 import type { Vehicle, VehicleOwnership } from '@/types/customers';
+import type { ServiceHistoryRow } from '@/types/workOrders';
 
 const props = defineProps<{
     vehicle: Vehicle;
     ownerships: VehicleOwnership[];
-    can: { update: boolean; delete: boolean; changeOwner: boolean };
+    /** Work orders of this vehicle in all branches, newest first */
+    history: ServiceHistoryRow[];
+    can: { update: boolean; delete: boolean; changeOwner: boolean; checkIn: boolean };
 }>();
 
 const details = computed(() =>
@@ -63,7 +67,10 @@ function destroy(): void {
 <template>
     <AppLayout>
         <PageHeader :title="vehicle.plate_number" :description="vehicle.name">
-            <template v-if="can.update || can.changeOwner || can.delete" #actions>
+            <template v-if="can.checkIn || can.update || can.changeOwner || can.delete" #actions>
+                <Link v-if="can.checkIn" :href="route('work-orders.create', { vehicle: vehicle.id })" :class="buttonVariants()">
+                    <ClipboardPlus aria-hidden="true" /> {{ $t('work_orders.add') }}
+                </Link>
                 <Link v-if="can.update" :href="route('vehicles.edit', vehicle.id)" :class="buttonVariants({ variant: 'outline' })">
                     <Pencil aria-hidden="true" /> {{ $t('common.edit') }}
                 </Link>
@@ -123,6 +130,32 @@ function destroy(): void {
                             <p v-if="ownership.reason" class="mt-1">{{ ownership.reason }}</p>
                         </li>
                     </ol>
+                </CardContent>
+            </Card>
+
+            <Card class="lg:col-span-2">
+                <CardHeader><CardTitle>{{ $t('work_orders.history') }}</CardTitle></CardHeader>
+                <CardContent class="p-0 sm:p-0">
+                    <p v-if="history.length === 0" class="px-4 pb-4 text-sm text-muted-foreground sm:px-6">{{ $t('work_orders.history_empty') }}</p>
+                    <ul v-else class="divide-y border-t">
+                        <li v-for="row in history" :key="row.id">
+                            <component
+                                :is="row.in_branch ? Link : 'div'"
+                                :href="row.in_branch ? route('work-orders.show', row.id) : undefined"
+                                class="flex items-start gap-3 px-4 py-3 text-sm sm:px-6"
+                                :class="row.in_branch && 'hover:bg-muted/50'"
+                            >
+                                <span class="min-w-0 flex-1">
+                                    <span class="block font-medium">{{ row.date_label }} · {{ row.number }}</span>
+                                    <span class="line-clamp-2 block">{{ row.complaint }}</span>
+                                    <span class="block text-xs text-muted-foreground">
+                                        <template v-if="row.odometer_in !== null">{{ formatNumber(row.odometer_in) }} km · </template>{{ row.branch_name }}
+                                    </span>
+                                </span>
+                                <WorkOrderStatusBadge :status="row.status" :label="row.status_label" />
+                            </component>
+                        </li>
+                    </ul>
                 </CardContent>
             </Card>
         </div>

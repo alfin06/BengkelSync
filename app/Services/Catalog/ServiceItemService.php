@@ -4,6 +4,7 @@ namespace App\Services\Catalog;
 
 use App\Exceptions\BusinessRuleViolation;
 use App\Models\ServiceItem;
+use App\Models\WorkOrderServiceLine;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -80,12 +81,11 @@ class ServiceItemService
     }
 
     /**
-     * Work order service lines (SPEC section 4, work_order_services.service_id) will
-     * reference catalog jobs. That table does not exist yet, so nothing can use a job.
+     * A job that appears on a work order cannot be deleted, only deactivated.
      */
     public function isUsed(ServiceItem $item): bool
     {
-        return false;
+        return WorkOrderServiceLine::query()->where('service_item_id', $item->id)->exists();
     }
 
     /**

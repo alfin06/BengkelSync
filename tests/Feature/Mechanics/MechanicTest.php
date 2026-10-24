@@ -2,9 +2,7 @@
 
 use App\Enums\RoleName;
 use App\Models\AuditLog;
-use App\Models\Branch;
 use App\Models\Mechanic;
-use App\Services\Tenancy\ProvisionedTenant;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -13,11 +11,6 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(function () {
     Storage::fake(config('filesystems.private_disk'));
 });
-
-function mechanicIn(ProvisionedTenant $shop, ?Branch $branch = null, array $attributes = []): Mechanic
-{
-    return inTenant($shop->tenant, $branch ?? $shop->branch, fn () => Mechanic::factory()->create($attributes));
-}
 
 function validMechanic(array $overrides = []): array
 {

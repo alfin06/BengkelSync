@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\RoleName;
+use App\Enums\WorkOrderStatus;
 use App\Models\Branch;
 use App\Models\CashAccount;
 use App\Models\Customer;
@@ -20,6 +21,7 @@ use App\Services\Purchasing\SupplierPaymentService;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
 use App\Services\Users\UserService;
+use App\Services\WorkOrders\WorkOrderService;
 use App\Support\Quantity;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
@@ -77,6 +79,7 @@ class DemoSeeder extends Seeder
             $this->inventory();
             $this->cash();
             $this->purchases();
+            $this->workOrders();
         });
 
         $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
@@ -123,6 +126,57 @@ class DemoSeeder extends Seeder
         $cash->countTo($petty, 300_000, __('stock.opening_balance'));
         $cash->countTo($anton, 25_000_000, __('stock.opening_balance'));
         $cash->transfer($drawer, $petty, 200_000, 'Isi kas kecil');
+    }
+
+    /**
+     * Work orders in the statuses the front desk sees during a day: waiting, being worked
+     * on, waiting for a part, finished, a draft estimate and a cancelled one.
+     */
+    private function workOrders(): void
+    {
+        $service = app(WorkOrderService::class);
+        $vehicles = Vehicle::query()->orderBy('id')->limit(6)->get()->all();
+        $mechanics = Mechanic::query()->where('is_active', true)->orderBy('id')->pluck('id')->all();
+        $catalog = ServiceItem::query()->orderBy('id')->get()->all();
+        $part = fn (string $sku): Part => Part::query()->where('sku', $sku)->firstOrFail();
+
+        $jobs = [
+            // [complaint, status, odometer, tasks]
+            ['Servis rutin 40.000 km', WorkOrderStatus::Queued, 40_150, ['Cek rem depan', 'Cek tekanan ban']],
+            ['AC kurang dingin, ada bunyi saat dinyalakan', WorkOrderStatus::InProgress, 87_300, ['Cek freon', 'Cek kompresor']],
+            ['Lampu aki menyala, susah starter pagi hari', WorkOrderStatus::WaitingParts, 120_480, ['Cek aki', 'Cek alternator']],
+            ['Ganti oli dan filter', WorkOrderStatus::Completed, 55_020, []],
+            ['Estimasi ganti kampas rem depan', WorkOrderStatus::Draft, 66_000, []],
+            ['Bunyi kaki-kaki depan kiri', WorkOrderStatus::Cancelled, 73_900, ['Cek tie rod', 'Cek ball joint']],
+        ];
+
+        foreach ($jobs as $index => [$complaint, $status, $odometer, $tasks]) {
+            $workOrder = $service->checkIn(
+                $vehicles[$index],
+                ['complaint' => $complaint, 'odometer_in' => $odometer],
+                $tasks,
+                [$mechanics[$index % count($mechanics)]],
+                draft: $status === WorkOrderStatus::Draft,
+            );
+
+            $item = $catalog[$index % count($catalog)];
+            $service->addService($workOrder, ['service_item_id' => $item->id, 'description' => $item->name, 'qty' => 1, 'unit_price' => $item->default_price]);
+
+            if ($index === 1 || $index === 3) {
+                $filter = $part('FO-AVZ');
+                $oil = $part('OLI-HLX-1040');
+                $service->addPart($workOrder, $filter, 100, $filter->sell_price);
+                $service->addPart($workOrder, $oil, 420, $oil->sell_price);
+            }
+
+            match ($status) {
+                WorkOrderStatus::InProgress => $service->changeStatus($workOrder, WorkOrderStatus::InProgress),
+                WorkOrderStatus::WaitingParts => [$service->changeStatus($workOrder, WorkOrderStatus::InProgress), $service->changeStatus($workOrder, WorkOrderStatus::WaitingParts)],
+                WorkOrderStatus::Completed => $service->changeStatus($workOrder, WorkOrderStatus::Completed),
+                WorkOrderStatus::Cancelled => $service->cancel($workOrder, 'Pelanggan memilih servis di tempat lain'),
+                default => null,
+            };
+        }
     }
 
     /**
