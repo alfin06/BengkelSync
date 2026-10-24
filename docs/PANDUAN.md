@@ -160,7 +160,11 @@ Pemilik bisa melakukan semuanya, termasuk:
 
 - **Beranda**: juga melihat **laba kotor** (hanya Pemilik).
 - **Toko & cabang**: nama bengkel dan **Kunci invoice setelah** sekian hari. Invoice yang lebih lama dari periode ini tidak bisa diubah atau dibatalkan, dan pembayarannya tidak bisa dibatalkan, kecuali oleh Pemilik. Perubahan oleh Pemilik ditandai **Diubah setelah periode dikunci** di riwayat. Pembayaran baru untuk invoice lama tetap bisa diterima.
-- Data cabang: nama, alamat, telepon, NPWP, dan **Logo**. Logo dicetak di invoice, kwitansi, dan SPK.
+- **Cabang** (di halaman **Toko & cabang**):
+  - **Tambah cabang**: isi nama, **Kode** (2–6 huruf/angka, dipakai di nomor dokumen, mis. `KLM/INV/2026/00001`), alamat, telepon, NPWP, **Zona waktu** (WIB/WITA/WIT), dan **Logo**. Cabang baru otomatis mendapat Laci Kasir, Kas Kecil, dan metode bayar Tunai; stok semua barang mulai dari nol. Beri akses staf lewat **Pengguna & akses**.
+  - **Ubah** (ikon pensil): Pemilik untuk semua cabang, Kepala Cabang untuk cabangnya sendiri. Logo dicetak di invoice, kwitansi, dan SPK. **Kode tidak bisa diubah** setelah cabang mengeluarkan dokumen pertama.
+  - **Hapus** (ikon tempat sampah, hanya Pemilik): ditolak bila masih ada SPK yang belum ditutup/dibatalkan, invoice belum lunas, hutang supplier, atau saldo di akun kas cabang itu. Cabang yang belum pernah dipakai dihapus permanen. Cabang yang sudah punya data **tidak dihapus datanya**: cabang hanya disembunyikan dan muncul di **Cabang yang dihapus**, lalu bisa dikembalikan dengan **Pulihkan**.
+  - Cabang terakhir tidak bisa dihapus.
 - **Pajak & invoice** (juga Kepala Cabang): nyalakan **Tagih pajak di invoice**, nama dan tarif pajak, harga **Sudah termasuk pajak** atau **Belum termasuk pajak**, serta **Catatan kaki invoice** (mis. nomor rekening atau garansi). Berlaku hanya untuk invoice baru.
 - **Akun kas & pembayaran**: akun kas, metode pembayaran (beserta biaya kartu dan kewajiban no. referensi), serta batas bayar tunai untuk Admin Depan.
 

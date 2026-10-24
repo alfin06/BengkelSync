@@ -48,11 +48,14 @@ trait BelongsToBranch
     }
 
     /**
+     * Includes deleted branches, so history across branches (e.g. a vehicle's services)
+     * still shows where the work was done.
+     *
      * @return BelongsTo<Branch, $this>
      */
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Branch::class)->withTrashed();
     }
 
     private static function guardSameBranch(Model $model, TenantContext $context): void

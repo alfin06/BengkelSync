@@ -59,11 +59,11 @@ describe('shop and branch details', function () {
         $manager = userWithRole($shop, RoleName::BranchManager);
 
         $this->actingAs($manager)->put(route('settings.shop.update'), ['name' => 'X'])->assertForbidden();
-        $this->actingAs($manager)->post(route('settings.branch.update'), ['name' => 'Pusat Surabaya', 'address' => 'Jl. Kalimas 1', 'phone' => '031 1234567'])->assertSessionHasNoErrors();
+        $this->actingAs($manager)->put(route('settings.branches.update', $shop->branch), ['name' => 'Pusat Surabaya', 'code' => $shop->branch->code, 'timezone' => 'Asia/Jakarta', 'address' => 'Jl. Kalimas 1', 'phone' => '031 1234567'])->assertSessionHasNoErrors();
         $this->actingAs(userWithRole($shop, RoleName::FrontDesk))->get(route('settings.shop.edit'))->assertForbidden();
 
         $this->actingAs($manager)->get(route('settings.shop.edit'))
-            ->assertInertia(fn (Assert $page) => $page->component('Settings/Shop')->where('shop', null)->where('branch.address', 'Jl. Kalimas 1'));
+            ->assertInertia(fn (Assert $page) => $page->component('Settings/Shop')->where('shop', null)->where('branchList.0.address', 'Jl. Kalimas 1')->where('can.createBranch', false));
 
         expect($shop->branch->fresh()?->phone)->toBe('+62311234567');
     });
@@ -72,16 +72,16 @@ describe('shop and branch details', function () {
         $shop = provisionTenant();
         $disk = Storage::disk(config('filesystems.private_disk'));
 
-        $this->actingAs($shop->owner)->post(route('settings.branch.update'), ['name' => 'Pusat', 'logo' => UploadedFile::fake()->image('logo.png', 200, 80)])->assertSessionHasNoErrors();
+        $this->actingAs($shop->owner)->put(route('settings.branches.update', $shop->branch), ['name' => 'Pusat', 'code' => $shop->branch->code, 'timezone' => 'Asia/Jakarta', 'logo' => UploadedFile::fake()->image('logo.png', 200, 80)])->assertSessionHasNoErrors();
         $first = (string) $shop->branch->fresh()?->logo_path;
         expect($disk->exists($first))->toBeTrue();
 
         $this->actingAs(userWithRole($shop, RoleName::FrontDesk))->get(route('branch.logo'))->assertOk();
 
-        $this->actingAs($shop->owner)->post(route('settings.branch.update'), ['name' => 'Pusat', 'logo' => UploadedFile::fake()->image('baru.png')])->assertSessionHasNoErrors();
+        $this->actingAs($shop->owner)->put(route('settings.branches.update', $shop->branch), ['name' => 'Pusat', 'code' => $shop->branch->code, 'timezone' => 'Asia/Jakarta', 'logo' => UploadedFile::fake()->image('baru.png')])->assertSessionHasNoErrors();
         expect($disk->exists($first))->toBeFalse();
 
-        $this->actingAs($shop->owner)->post(route('settings.branch.update'), ['name' => 'Pusat', 'remove_logo' => true])->assertSessionHasNoErrors();
+        $this->actingAs($shop->owner)->put(route('settings.branches.update', $shop->branch), ['name' => 'Pusat', 'code' => $shop->branch->code, 'timezone' => 'Asia/Jakarta', 'remove_logo' => true])->assertSessionHasNoErrors();
         expect($shop->branch->fresh()?->logo_path)->toBeNull();
         $this->actingAs($shop->owner)->get(route('branch.logo'))->assertNotFound();
         $this->post(route('logout'));

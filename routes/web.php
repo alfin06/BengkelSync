@@ -29,6 +29,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseController;
 use App\Http\Controllers\Purchasing\SupplierDebtController;
 use App\Http\Controllers\Purchasing\SupplierPaymentController;
+use App\Http\Controllers\Settings\BranchController;
 use App\Http\Controllers\Settings\InvoiceSettingsController;
 use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\ShopSettingsController;
@@ -143,8 +144,16 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     // Shop and branch settings, and the branch logo for printed documents
     Route::get('/settings/shop', [ShopSettingsController::class, 'edit'])->name('settings.shop.edit');
     Route::put('/settings/shop', [ShopSettingsController::class, 'updateShop'])->name('settings.shop.update');
-    Route::post('/settings/branch', [ShopSettingsController::class, 'updateBranch'])->name('settings.branch.update');
-    Route::get('/branch/logo', [ShopSettingsController::class, 'logo'])->name('branch.logo');
+    Route::get('/branch/logo', [BranchController::class, 'activeLogo'])->name('branch.logo');
+    Route::prefix('settings/branches')->name('settings.branches.')->controller(BranchController::class)->group(function () {
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{branch}/edit', 'edit')->name('edit');
+        Route::put('/{branch}', 'update')->name('update');
+        Route::delete('/{branch}', 'destroy')->name('destroy');
+        Route::post('/{branch}/restore', 'restore')->name('restore')->withTrashed();
+        Route::get('/{branch}/logo', 'logo')->name('logo');
+    });
 
     // Staff accounts and roles (the permission matrix)
     Route::prefix('settings')->name('settings.')->group(function () {

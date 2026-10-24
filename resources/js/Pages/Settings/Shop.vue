@@ -1,24 +1,34 @@
 <script setup lang="ts">
-import { Link, useForm } from '@inertiajs/vue3';
-import { ImageUp, Lock, Receipt } from 'lucide-vue-next';
+import { Link, router, useForm } from '@inertiajs/vue3';
+import { Lock, Pencil, Plus, Receipt, RotateCcw, Store, Trash2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Button, buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import Checkbox from '@/Components/ui/Checkbox.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import ConfirmDialog from '@/Components/ui/ConfirmDialog.vue';
 import FormField from '@/Components/ui/FormField.vue';
 import { Input } from '@/Components/ui/input';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Textarea from '@/Components/ui/Textarea.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 /**
- * "Toko & cabang": the shop's name and invoice lock period (Owner), and the active
- * branch's details printed on invoices, kwitansi and SPK (branch manager).
+ * "Toko & cabang": the shop's name and invoice lock period (Owner), and the branches:
+ * add and delete (Owner), edit (branch managers, their own branches).
  */
+interface BranchRow {
+    id: number;
+    name: string;
+    code: string;
+    address: string | null;
+    phone: string | null;
+    is_active: boolean;
+}
+
 const props = defineProps<{
     shop: { name: string; invoice_lock_days: number | null } | null;
-    branch: { name: string; code: string; address: string; phone: string; npwp: string; logo_url: string | null } | null;
-    can: { updateShop: boolean; updateBranch: boolean; taxSettings: boolean };
+    branchList: BranchRow[];
+    deletedBranches: BranchRow[];
+    can: { updateShop: boolean; updateBranch: boolean; createBranch: boolean; deleteBranch: boolean; taxSettings: boolean };
 }>();
 
 const shopForm = useForm({ name: props.shop?.name ?? '', invoice_lock_days: props.shop?.invoice_lock_days === null || props.shop === null ? '' : String(props.shop.invoice_lock_days) });
@@ -29,36 +39,30 @@ function saveShop(): void {
         .put(route('settings.shop.update'), { preserveScroll: true, onSuccess: () => shopForm.defaults() });
 }
 
-const branchForm = useForm({
-    name: props.branch?.name ?? '',
-    address: props.branch?.address ?? '',
-    phone: props.branch?.phone ?? '',
-    npwp: props.branch?.npwp ?? '',
-    logo: null as File | null,
-    remove_logo: false,
-});
-const logoInput = ref<HTMLInputElement | null>(null);
-const preview = ref<string | null>(null);
+const deleting = ref<BranchRow | null>(null);
+const deleteOpen = ref(false);
+const busy = ref(false);
 
-function pickLogo(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    branchForm.logo = file;
-    branchForm.remove_logo = false;
-    preview.value = file ? URL.createObjectURL(file) : null;
+function askDelete(branch: BranchRow): void {
+    deleting.value = branch;
+    deleteOpen.value = true;
 }
 
-function saveBranch(): void {
-    branchForm.post(route('settings.branch.update'), {
+function deleteBranch(): void {
+    if (deleting.value === null) {
+        return;
+    }
+
+    busy.value = true;
+    router.delete(route('settings.branches.destroy', deleting.value.id), {
         preserveScroll: true,
-        forceFormData: true,
-        onSuccess: () => {
-            branchForm.logo = null;
-            preview.value = null;
-            if (logoInput.value) {
-                logoInput.value.value = '';
-            }
-        },
+        onSuccess: () => (deleteOpen.value = false),
+        onFinish: () => (busy.value = false),
     });
+}
+
+function restoreBranch(branch: BranchRow): void {
+    router.post(route('settings.branches.restore', branch.id), {}, { preserveScroll: true });
 }
 </script>
 
@@ -107,53 +111,70 @@ function saveBranch(): void {
                 </CardContent>
             </Card>
 
-            <Card v-if="branch">
-                <CardHeader><CardTitle>{{ $t('shop_settings.branch', { code: branch.code }) }}</CardTitle></CardHeader>
+            <Card v-if="can.updateBranch">
+                <CardHeader class="flex-row items-center justify-between gap-2 space-y-0">
+                    <CardTitle>{{ $t('branches.title') }}</CardTitle>
+                    <Link v-if="can.createBranch" :href="route('settings.branches.create')" :class="buttonVariants({ size: 'sm' })">
+                        <Plus aria-hidden="true" /> {{ $t('branches.add') }}
+                    </Link>
+                </CardHeader>
                 <CardContent>
-                    <form class="grid gap-5" novalidate @submit.prevent="saveBranch">
-                        <FormField id="branch-name" :label="$t('shop_settings.branch_name')" :error="branchForm.errors.name" required>
-                            <template #default="{ invalid, describedBy }">
-                                <Input id="branch-name" v-model="branchForm.name" :invalid="invalid" :aria-describedby="describedBy" />
-                            </template>
-                        </FormField>
-                        <FormField id="branch-address" :label="$t('shop_settings.address')" :error="branchForm.errors.address">
-                            <template #default="{ invalid, describedBy }">
-                                <Textarea id="branch-address" v-model="branchForm.address" rows="2" :invalid="invalid" :aria-describedby="describedBy" />
-                            </template>
-                        </FormField>
-                        <div class="grid gap-5 sm:grid-cols-2">
-                            <FormField id="branch-phone" :label="$t('fields.phone')" :error="branchForm.errors.phone">
-                                <template #default="{ invalid, describedBy }">
-                                    <Input id="branch-phone" v-model="branchForm.phone" type="tel" inputmode="tel" :invalid="invalid" :aria-describedby="describedBy" />
-                                </template>
-                            </FormField>
-                            <FormField id="branch-npwp" label="NPWP" :hint="$t('shop_settings.npwp_hint')" :error="branchForm.errors.npwp">
-                                <template #default="{ invalid, describedBy }">
-                                    <Input id="branch-npwp" v-model="branchForm.npwp" inputmode="numeric" :invalid="invalid" :aria-describedby="describedBy" />
-                                </template>
-                            </FormField>
-                        </div>
-
-                        <FormField id="branch-logo" :label="$t('shop_settings.logo')" :hint="$t('shop_settings.logo_hint')" :error="branchForm.errors.logo">
-                            <template #default="{ describedBy }">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex size-20 items-center justify-center rounded-md border bg-white p-1">
-                                        <img v-if="preview || (branch.logo_url && !branchForm.remove_logo)" :src="preview ?? branch.logo_url ?? ''" alt="" class="max-h-full max-w-full object-contain" />
-                                        <ImageUp v-else class="size-6 text-muted-foreground" aria-hidden="true" />
-                                    </div>
-                                    <label for="branch-logo" :class="buttonVariants({ variant: 'outline', size: 'sm' })" class="cursor-pointer">{{ $t('shop_settings.choose_logo') }}</label>
-                                    <input id="branch-logo" ref="logoInput" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" :aria-describedby="describedBy" @change="pickLogo" />
+                    <ul class="divide-y">
+                        <li v-for="item in branchList" :key="item.id" class="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                            <Store class="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-medium">{{ item.name }}</span>
+                                    <Badge>{{ item.code }}</Badge>
+                                    <Badge v-if="item.is_active" tone="success">{{ $t('branches.current') }}</Badge>
                                 </div>
-                            </template>
-                        </FormField>
-                        <Checkbox v-if="branch.logo_url && !branchForm.logo" id="remove-logo" v-model="branchForm.remove_logo" :label="$t('shop_settings.remove_logo')" />
+                                <p v-if="item.address || item.phone" class="truncate text-sm text-muted-foreground">
+                                    {{ [item.address, item.phone].filter(Boolean).join(' · ') }}
+                                </p>
+                            </div>
+                            <div class="flex shrink-0 gap-1">
+                                <Link
+                                    :href="route('settings.branches.edit', item.id)"
+                                    :class="buttonVariants({ variant: 'ghost', size: 'icon' })"
+                                    :aria-label="$t('branches.edit_label', { name: item.name })"
+                                >
+                                    <Pencil aria-hidden="true" />
+                                </Link>
+                                <Button
+                                    v-if="can.deleteBranch && branchList.length > 1"
+                                    variant="ghost"
+                                    size="icon"
+                                    class="text-destructive"
+                                    :aria-label="$t('branches.delete_label', { name: item.name })"
+                                    @click="askDelete(item)"
+                                >
+                                    <Trash2 aria-hidden="true" />
+                                </Button>
+                            </div>
+                        </li>
+                    </ul>
 
-                        <div class="flex justify-end">
-                            <Button type="submit" :loading="branchForm.processing" :disabled="!branchForm.isDirty">{{ $t('common.save') }}</Button>
-                        </div>
-                    </form>
+                    <div v-if="deletedBranches.length > 0" class="mt-6 border-t pt-4">
+                        <h3 class="mb-2 text-sm font-medium text-muted-foreground">{{ $t('branches.deleted_title') }}</h3>
+                        <ul class="grid gap-2">
+                            <li v-for="item in deletedBranches" :key="item.id" class="flex items-center gap-3">
+                                <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">{{ item.name }} ({{ item.code }})</span>
+                                <Button variant="outline" size="sm" @click="restoreBranch(item)"><RotateCcw aria-hidden="true" /> {{ $t('branches.restore') }}</Button>
+                            </li>
+                        </ul>
+                    </div>
                 </CardContent>
             </Card>
         </div>
+
+        <ConfirmDialog
+            v-model:open="deleteOpen"
+            :title="$t('branches.delete_title', { name: deleting?.name ?? '' })"
+            :description="$t('branches.delete_description')"
+            :confirm-label="$t('common.delete')"
+            :processing="busy"
+            destructive
+            @confirm="deleteBranch"
+        />
     </AppLayout>
 </template>

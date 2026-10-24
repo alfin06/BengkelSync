@@ -129,6 +129,7 @@ Each module: what users do, then the code that does it and the rules worth knowi
 - Workshop today, low stock, customer debt, supplier bills due, cash balances for everyone allowed; sales, money received, expenses, 12-month chart, top services and parts, jobs per mechanic for `dashboard.view_financials`; gross profit only for the Owner.
 
 ### Shop and branch settings (Phase 2)
+- Branch management (2026-10-25): add, edit and delete branches on "Toko & cabang" (`BranchService`, `BranchPolicy`, `Settings/BranchForm`). Deleting is refused while work, debts or cash are left; a used branch is soft-deleted (restorable), an unused one removed for good.
 - Shop name and invoice lock period (Owner); branch name, address, phone, NPWP and logo (printed on all documents); tax and invoice footer on "Pajak & invoice".
 - Invoices older than the lock period can't be changed except by the Owner (`invoice.update_locked`), and such changes are marked "after lock".
 

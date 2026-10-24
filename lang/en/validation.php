@@ -34,6 +34,7 @@ return [
         'customer_id' => 'customer',
         'reason' => 'reason',
         'code' => 'code',
+        'timezone' => 'time zone',
         'category' => 'category',
         'default_price' => 'price',
         'estimated_minutes' => 'estimated time',

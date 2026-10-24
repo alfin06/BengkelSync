@@ -194,6 +194,7 @@ return [
         'customer_id' => 'pelanggan',
         'reason' => 'alasan',
         'code' => 'kode',
+        'timezone' => 'zona waktu',
         'category' => 'kategori',
         'default_price' => 'harga',
         'estimated_minutes' => 'perkiraan waktu',

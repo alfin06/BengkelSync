@@ -172,7 +172,7 @@ Users with the right permission can edit any record, but every edit is traceable
 - **Supplier debts (Hutang Supplier)**: outstanding purchases per supplier, sorted by due date, with "Bayar" (supports several payments over time).
 - **Cash (Kas)**: one card per cash account with its balance. Actions: transfer (e.g. top up petty cash), cash count / adjustment, and movement history with filters.
 - **Mechanics**: list, add/edit, active toggle. NIK and the KTP photo are visible only with `mechanic.view_identity`.
-- **Settings**: tenant profile, branches (incl. tax settings), payment methods and cash accounts, users & invitations, roles & permission matrix, lock period, subscription/billing.
+- **Settings**: tenant profile, branches (add, edit, delete; incl. tax settings), payment methods and cash accounts, users & invitations, roles & permission matrix, lock period, subscription/billing.
 - **Platform admin** (separate area).
 
 ## 8. Non-functional
@@ -249,6 +249,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Dashboard (single branch view)
 - [x] User management (owner creates users with a password) + role/permission matrix UI
 - [x] Shop & branch settings (profile, logo, tax, invoice footer)
+- [x] Branch management: add, edit and delete branches (Owner adds/deletes, branch managers edit their own)
 
 ### MVP — Pilot launch
 - [ ] Production server, HTTPS, daily backups with a tested restore, error tracking
@@ -289,6 +290,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
 - Settings: the owner can still fix locked invoices (marked in the history); logo per branch (2026-10-24).
+- Branches (2026-10-25): only the Owner adds and deletes branches; branch managers edit the branches they work in. A new branch gets the default cash accounts and payment method. The code (in document numbers) is fixed once the branch has issued a document. Deleting is refused while the branch has open work orders, unpaid invoices, unpaid supplier bills or money in its cash accounts, and never removes data: a branch with any data is soft-deleted and can be restored by the Owner; only a branch that was never used is removed for good.
 - Dashboard: sales and money received side by side; card fees not counted; gross profit only for the Owner (2026-10-24).
 - Expenses: Front Desk records small cash expenses up to the branch limit; "Gaji & bonus" is restricted to the Owner; categories are managed by Owner and Finance; no rent category (the shop owns its place) (2026-10-24).
 - Invoice editing: Front Desk may correct unpaid invoices; invoices with payments need Finance (`invoice.update_paid`) (2026-10-24).
