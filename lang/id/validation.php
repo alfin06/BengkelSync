@@ -267,5 +267,6 @@ return [
         'lines.*.amount' => 'jumlah',
         'lines.*.cash_tendered' => 'uang diterima',
         'lines.*.reference' => 'no. referensi',
+        'lines.*.id' => 'baris',
     ],
 ];

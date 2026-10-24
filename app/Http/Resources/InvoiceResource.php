@@ -70,7 +70,13 @@ class InvoiceResource extends JsonResource
             'lines' => $this->whenLoaded('lines', fn () => $this->lines->map(fn (InvoiceLine $line) => [
                 'id' => $line->id,
                 'type' => $line->type->value,
+                'part_id' => $line->part_id,
+                'service_item_id' => $line->service_item_id,
+                'allows_decimals' => $line->part?->unit->allowsDecimals() ?? false,
                 'description' => $line->description,
+                // "4.2" for inputs, "4,2" for display.
+                'qty' => rtrim(rtrim($line->qty, '0'), '.'),
+                'unit_price' => $line->unit_price,
                 'qty_label' => Quantity::format($line->qtyHundredths()),
                 'unit_label' => $line->part?->unit->label(),
                 'unit_price_label' => Money::format($line->unit_price),

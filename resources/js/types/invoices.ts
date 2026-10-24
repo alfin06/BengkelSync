@@ -3,7 +3,13 @@ export type InvoiceStatus = 'unpaid' | 'partial' | 'paid' | 'void';
 export interface InvoiceLine {
     id: number;
     type: 'service' | 'part' | 'other';
+    part_id: number | null;
+    service_item_id: number | null;
+    allows_decimals: boolean;
     description: string;
+    /** Plain value for inputs, e.g. "4.2" */
+    qty: string;
+    unit_price: number;
     qty_label: string;
     unit_label: string | null;
     unit_price_label: string;
@@ -66,9 +72,11 @@ export interface WorkOrderInvoiceLine {
     unit_price: number;
 }
 
-/** A line of a walk-in sale being typed */
-export interface WalkInLine {
+/** A line being typed: a walk-in sale, or an invoice being edited */
+export interface InvoiceLineInput {
     key: string;
+    /** Existing line of the invoice being edited (keeps its cost and mechanic) */
+    id?: number | null;
     type: 'service' | 'part' | 'other';
     part_id: number | null;
     service_item_id: number | null;

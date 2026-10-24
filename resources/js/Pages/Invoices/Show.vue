@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Ban, Banknote, Printer } from 'lucide-vue-next';
+import { Ban, Banknote, History, Pencil, Printer } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InvoiceStatusBadge from '@/Components/Invoices/InvoiceStatusBadge.vue';
 import CheckoutDialog from '@/Components/Payments/CheckoutDialog.vue';
@@ -19,7 +19,7 @@ const props = defineProps<{
     methods: PaymentMethodOption[];
     today: string;
     suggestedDueDate: string;
-    can: { void: boolean; pay: boolean; voidPayment: boolean };
+    can: { void: boolean; update: boolean; pay: boolean; voidPayment: boolean };
 }>();
 
 const payOpen = ref(false);
@@ -71,6 +71,12 @@ function voidInvoice(reason: string | null): void {
         <PageHeader :title="invoice.number" :description="invoice.customer?.name ?? $t('invoices.walk_in_customer')">
             <template #actions>
                 <Button v-if="can.pay" @click="payOpen = true"><Banknote aria-hidden="true" /> {{ $t('payments.pay') }}</Button>
+                <Link v-if="can.update" :href="route('invoices.edit', invoice.id)" :class="buttonVariants({ variant: 'outline' })">
+                    <Pencil aria-hidden="true" /> {{ $t('common.edit') }}
+                </Link>
+                <Link v-if="invoice.revision_no > 0" :href="route('invoices.revisions', invoice.id)" :class="buttonVariants({ variant: 'ghost' })">
+                    <History aria-hidden="true" /> {{ $t('invoices.revision', { no: String(invoice.revision_no) }) }}
+                </Link>
                 <a :href="route('invoices.print', invoice.id)" target="_blank" rel="noopener" :class="buttonVariants({ variant: 'outline' })">
                     <Printer aria-hidden="true" /> {{ $t('invoices.print') }}
                 </a>

@@ -36,7 +36,7 @@ Default roles per tenant (the owner can edit them or add more in the permission 
 |---|---|
 | Owner (Pemilik) | everything; system role, cannot be deleted; at least one active owner must exist |
 | Branch Manager (Kepala Cabang) | everything within assigned branches except billing, roles, tenant settings |
-| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices incl. discounts (`invoice.discount`, pilot decision; to be made stricter later), record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries; pay small ones on the spot from cash with `supplier_payment.on_receipt`), suppliers (view/create), cash (view) |
+| Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices incl. discounts (`invoice.discount`, pilot decision; to be made stricter later), correct unpaid invoices (`invoice.update`, pilot decision), record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries; pay small ones on the spot from cash with `supplier_payment.on_receipt`), suppliers (view/create), cash (view) |
 | Finance (Keuangan) | everything Front Desk has, plus mechanics (create/update incl. identity), invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, service and part prices (service create/update), stock adjust, financial dashboard, reports |
 | Warehouse (Gudang) | parts, stock, suppliers, purchases, transfers |
 
@@ -142,6 +142,8 @@ Users with the right permission can edit any record, but every edit is traceable
   - Totals are recalculated. Changing part lines creates `invoice_edit` stock movements for the difference.
   - If the new total is lower than `amount_paid`, the system blocks the save and asks the user to record a refund or adjust payments first.
   - The invoice number never changes. The printed invoice can show "Revisi 2" when `revision_no > 0`.
+  - Edited lines keep their purchase cost and mechanic. Cancelling the invoice of a work order after edits gives back (or takes out) the difference to the work order's own part quantities.
+  - The change history lists every edit with who, when, the reason, lines added/removed/changed and the totals before and after.
 - **Payments**: editing or deleting needs `payment.update` / `payment.delete`, a reason, and recalculates invoice status. The matching cash movement is reversed with a new movement, never deleted.
 - **Supplier payments and cash movements** follow the same rule: corrections are new rows with a reason, so balances can always be traced.
 - **Settings**: tenants can choose to allow or block editing invoices older than N days (lock period), so closed months stay stable for bookkeeping.
@@ -229,7 +231,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Work orders with status flow, task checklist, and mechanic assignment
 - [x] Invoices (from work order and walk-in), optional tax, print/PDF
 - [x] Customer payments with several methods per checkout, card surcharge, kwitansi
-- [ ] Invoice editing with reason + revisions
+- [x] Invoice editing with reason + revisions
 
 ### MVP — Phase 2: Management
 - [ ] Expenses + receipt upload (paid from a cash account, e.g. petty cash)
@@ -276,6 +278,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Invoice editing: Front Desk may correct unpaid invoices; invoices with payments need Finance (`invoice.update_paid`) (2026-10-24).
 - Payments: a due date is required when part stays unpaid; customer debt list with reminders; kwitansi on A5; Finance may cancel single payment lines, never deleting them (2026-10-24).
 - Invoices: A5 on 2-ply paper; "Pelanggan umum" for counter sales; the branch manager decides whether invoices carry tax; Front Desk may give discounts for now (2026-10-24).
 - Work orders: parts leave stock when added; Front Desk and Finance type or change line prices; a draft status is kept for estimates; the job sheet (SPK) is printable (2026-10-24).

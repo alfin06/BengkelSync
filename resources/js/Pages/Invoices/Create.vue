@@ -2,7 +2,7 @@
 import { Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import CustomerPicker from '@/Components/Customers/CustomerPicker.vue';
-import WalkInLinesEditor from '@/Components/Invoices/WalkInLinesEditor.vue';
+import InvoiceLinesEditor from '@/Components/Invoices/InvoiceLinesEditor.vue';
 import { Button, buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import Checkbox from '@/Components/ui/Checkbox.vue';
@@ -16,7 +16,7 @@ import { invoiceTotals } from '@/lib/invoice';
 import { formatRupiah } from '@/lib/money';
 import { linePrice } from '@/lib/quantity';
 import { cn } from '@/lib/utils';
-import type { TaxSetting, WalkInLine, WorkOrderInvoiceLine } from '@/types/invoices';
+import type { TaxSetting, InvoiceLineInput, WorkOrderInvoiceLine } from '@/types/invoices';
 import type { CatalogOption } from '@/types/workOrders';
 
 const props = defineProps<{
@@ -32,7 +32,7 @@ const props = defineProps<{
 const priced = ref(
     (props.workOrder?.lines ?? []).map((line) => ({ ...line, price: line.unit_price as number | null, discount: null as number | null })),
 );
-const walkIn = ref<WalkInLine[]>([]);
+const walkIn = ref<InvoiceLineInput[]>([]);
 const customerMode = ref<'general' | 'customer'>('general');
 
 const form = useForm({
@@ -139,7 +139,7 @@ const error = (index: number, field: string): string | undefined => errors.value
                             </div>
                         </li>
                     </ol>
-                    <WalkInLinesEditor v-else v-model="walkIn" :catalog="catalog" :can-discount="can.discount" :errors="errors" />
+                    <InvoiceLinesEditor v-else v-model="walkIn" :catalog="catalog" :can-discount="can.discount" :errors="errors" />
                     <p v-if="workOrder" class="mt-3 text-sm text-muted-foreground">
                         {{ $t('invoices.fix_on_work_order') }}
                         <Link :href="route('work-orders.show', workOrder.id)" class="font-medium text-primary underline-offset-4 hover:underline">{{ workOrder.number }}</Link>

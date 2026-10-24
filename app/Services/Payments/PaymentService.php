@@ -6,15 +6,14 @@ use App\Enums\CashMovementType;
 use App\Enums\DocumentType;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentMethodType;
-use App\Enums\WorkOrderStatus;
 use App\Exceptions\BusinessRuleViolation;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\PaymentReceipt;
-use App\Models\WorkOrder;
 use App\Services\Audit\AuditLogger;
 use App\Services\Cash\CashService;
+use App\Services\Invoicing\InvoiceSettlement;
 use App\Support\DocumentNumber;
 use App\Support\Money;
 use App\Support\Tenancy\TenantContext;
@@ -33,6 +32,7 @@ class PaymentService
     public function __construct(
         private readonly TenantContext $context,
         private readonly CashService $cash,
+        private readonly InvoiceSettlement $settlement,
         private readonly AuditLogger $audit,
         private readonly AuthFactory $auth,
     ) {}
@@ -96,7 +96,7 @@ class PaymentService
                 $this->cash->record($method->account, CashMovementType::CustomerPayment, $payment->received(), $payment, __('payments.cash_note', ['invoice' => $locked->number, 'receipt' => $receipt->number]));
             }
 
-            $this->applyPaid($locked, $locked->amount_paid + $total);
+            $this->settlement->apply($locked, $locked->amount_paid + $total);
 
             return $receipt;
         });
@@ -148,7 +148,7 @@ class PaymentService
         $payment->forceFill(['voided_at' => now(), 'void_reason' => $reason, 'voided_by' => $this->userId()])->save();
 
         $this->cash->record($payment->account, CashMovementType::CustomerPayment, -$payment->received(), $payment, __('payments.void_cash_note', ['invoice' => $invoice->number, 'reason' => $reason]));
-        $this->applyPaid($invoice, $invoice->amount_paid - $payment->amount);
+        $this->settlement->apply($invoice, $invoice->amount_paid - $payment->amount);
         $this->audit->record('payment_voided', $payment, ['amount' => $payment->amount, 'surcharge_amount' => $payment->surcharge_amount], [], $reason);
     }
 
@@ -201,27 +201,6 @@ class PaymentService
 
         if ($invoice->due_date?->toDateString() !== $dueDate) {
             $invoice->forceFill(['due_date' => $dueDate, 'due_soon_notified_at' => null, 'overdue_notified_at' => null]);
-        }
-    }
-
-    /**
-     * New paid amount and status; a fully paid work order is closed, and opened again
-     * (back to invoiced) when a payment is cancelled.
-     */
-    private function applyPaid(Invoice $invoice, int $paid): void
-    {
-        $status = InvoiceStatus::for($invoice->total, $paid);
-        $invoice->forceFill(['amount_paid' => $paid, 'status' => $status])->save();
-
-        if ($invoice->work_order_id === null) {
-            return;
-        }
-
-        $workOrder = WorkOrder::query()->whereKey($invoice->work_order_id)->lockForUpdate()->firstOrFail();
-        $next = $status === InvoiceStatus::Paid ? WorkOrderStatus::Closed : WorkOrderStatus::Invoiced;
-
-        if ($workOrder->status !== $next) {
-            $workOrder->forceFill(['status' => $next])->save();
         }
     }
 

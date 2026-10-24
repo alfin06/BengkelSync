@@ -12,7 +12,7 @@ import Select from '@/Components/ui/Select.vue';
 import { formatRupiah } from '@/lib/money';
 import { linePrice } from '@/lib/quantity';
 import { cn } from '@/lib/utils';
-import type { WalkInLine } from '@/types/invoices';
+import type { InvoiceLineInput } from '@/types/invoices';
 import type { CatalogOption } from '@/types/workOrders';
 
 interface PartResult {
@@ -27,11 +27,11 @@ interface PartResult {
 }
 
 /**
- * The lines of a counter sale: parts (taken from stock when saved), services and other
- * charges. Totals shown are a preview; the server calculates the real ones.
+ * Invoice lines being typed (a counter sale, or an invoice being edited): parts (stock
+ * follows when saved), services and other charges. Totals shown are a preview; the server calculates the real ones.
  */
 const props = defineProps<{ catalog: CatalogOption[]; canDiscount: boolean; errors: Partial<Record<string, string>> }>();
-const lines = defineModel<WalkInLine[]>({ required: true });
+const lines = defineModel<InvoiceLineInput[]>({ required: true });
 
 const key = (): string => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -84,7 +84,7 @@ function addLine(type: 'service' | 'other'): void {
     ];
 }
 
-function pickCatalog(line: WalkInLine, value: string | number | null | undefined): void {
+function pickCatalog(line: InvoiceLineInput, value: string | number | null | undefined): void {
     const item = props.catalog.find((option) => option.id === Number(value));
     line.service_item_id = item?.id ?? null;
     if (item) {
@@ -98,7 +98,7 @@ function remove(index: number): void {
 }
 
 const error = (index: number, field: string): string | undefined => props.errors[`lines.${index}.${field}`];
-const lineTotal = (line: WalkInLine): number => Math.max(linePrice(line.qty, line.unit_price) - (line.discount_amount ?? 0), 0);
+const lineTotal = (line: InvoiceLineInput): number => Math.max(linePrice(line.qty, line.unit_price) - (line.discount_amount ?? 0), 0);
 const catalogOptions = props.catalog.map((item) => ({ value: item.id, label: `${item.name} · ${formatRupiah(item.default_price)}` }));
 </script>
 

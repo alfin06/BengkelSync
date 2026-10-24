@@ -107,5 +107,6 @@ return [
         'lines.*.amount' => 'amount',
         'lines.*.cash_tendered' => 'cash received',
         'lines.*.reference' => 'reference no.',
+        'lines.*.id' => 'line',
     ],
 ];

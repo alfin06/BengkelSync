@@ -149,6 +149,7 @@ class InvoiceController extends Controller
             'suggestedDueDate' => $invoice->due_date?->toDateString() ?? Carbon::parse($today)->addDays(7)->toDateString(),
             'can' => [
                 'void' => $user->can('void', $invoice),
+                'update' => $user->can('update', $invoice),
                 'pay' => $canPay,
                 'voidPayment' => $user->can(Permission::PaymentDelete->value),
             ],

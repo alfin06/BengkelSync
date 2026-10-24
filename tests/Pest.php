@@ -16,6 +16,7 @@ use App\Models\WorkOrder;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
 use App\Services\Invoicing\InvoiceService;
+use App\Services\Payments\PaymentService;
 use App\Services\Tenancy\ProvisionedTenant;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
@@ -262,4 +263,9 @@ function pricesOf(ProvisionedTenant $shop, WorkOrder $workOrder, array $override
 function invoiceInput(array $overrides = []): array
 {
     return ['issue_date' => now('Asia/Jakarta')->toDateString(), 'discount_amount' => 0, ...$overrides];
+}
+
+function payments(ProvisionedTenant $shop, callable $callback): mixed
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(PaymentService::class)));
 }

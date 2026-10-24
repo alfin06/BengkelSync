@@ -45,6 +45,21 @@ class InvoicePolicy
     }
 
     /**
+     * Edit an issued invoice (SPEC section 6): an unpaid one with invoice.update, one with
+     * payments with invoice.update_paid. Cancelled invoices are never edited.
+     */
+    public function update(User $user, Invoice $invoice): bool
+    {
+        if ($invoice->status === InvoiceStatus::Void) {
+            return false;
+        }
+
+        return $invoice->amount_paid === 0
+            ? $user->can(Permission::InvoiceUpdate->value)
+            : $user->can(Permission::InvoiceUpdatePaid->value);
+    }
+
+    /**
      * Take a payment ("Bayar").
      */
     public function pay(User $user, Invoice $invoice): bool

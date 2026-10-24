@@ -16,6 +16,7 @@ use App\Http\Controllers\Inventory\PartLookupController;
 use App\Http\Controllers\Inventory\PartStockController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Invoicing\InvoiceController;
+use App\Http\Controllers\Invoicing\InvoiceRevisionController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mechanics\MechanicController;
 use App\Http\Controllers\Mechanics\MechanicKtpController;
@@ -87,6 +88,9 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
     Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
+    Route::get('/invoices/{invoice}/edit', [InvoiceRevisionController::class, 'edit'])->name('invoices.edit');
+    Route::put('/invoices/{invoice}', [InvoiceRevisionController::class, 'update'])->name('invoices.update');
+    Route::get('/invoices/{invoice}/revisions', [InvoiceRevisionController::class, 'index'])->name('invoices.revisions');
 
     // Customer payments: several methods per checkout (one kwitansi), and customer debt
     Route::get('/customer-debts', CustomerDebtController::class)->name('customer-debts.index');

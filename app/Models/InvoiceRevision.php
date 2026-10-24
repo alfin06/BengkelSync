@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $reason
  * @property int|null $edited_by
  * @property Carbon|null $created_at
+ * @property-read User|null $editor
  */
 class InvoiceRevision extends Model
 {
@@ -43,5 +45,13 @@ class InvoiceRevision extends Model
             'snapshot' => 'array',
             'revision_no' => 'integer',
         ];
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function editor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edited_by');
     }
 }

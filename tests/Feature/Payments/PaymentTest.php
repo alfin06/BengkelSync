@@ -23,11 +23,6 @@ use App\Support\Terbilang;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
-function payments(ProvisionedTenant $shop, callable $callback): mixed
-{
-    return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(PaymentService::class)));
-}
-
 /**
  * The branch's default "Tunai" method (into the cash drawer).
  */
