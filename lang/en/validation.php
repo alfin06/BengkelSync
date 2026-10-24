@@ -113,5 +113,10 @@ return [
         'all_branches' => 'all branches',
         'is_active' => 'active status',
         'permissions' => 'permissions',
+        'expense_date' => 'date',
+        'category_id' => 'category',
+        'receipt' => 'receipt photo',
+        'is_restricted' => 'restricted',
+        'name' => 'name',
     ],
 ];

@@ -273,5 +273,9 @@ return [
         'all_branches' => 'semua cabang',
         'is_active' => 'status aktif',
         'permissions' => 'hak akses',
+        'expense_date' => 'tanggal',
+        'category_id' => 'kategori',
+        'receipt' => 'foto nota',
+        'is_restricted' => 'rahasia',
     ],
 ];

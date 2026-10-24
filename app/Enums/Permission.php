@@ -86,6 +86,11 @@ enum Permission: string
     case ExpenseCreate = 'expense.create';
     case ExpenseUpdate = 'expense.update';
     case ExpenseDelete = 'expense.delete';
+    // Record small expenses from the cash drawer or petty cash, up to the branch limit.
+    case ExpenseCreateCash = 'expense.create_cash';
+    // See and change expenses in restricted categories (salaries); Owner only by default.
+    case ExpenseViewRestricted = 'expense.view_restricted';
+    case ExpenseManageCategories = 'expense.manage_categories';
 
     case DashboardView = 'dashboard.view';
     case DashboardViewFinancials = 'dashboard.view_financials';

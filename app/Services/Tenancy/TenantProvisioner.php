@@ -7,6 +7,7 @@ use App\Enums\TenantStatus;
 use App\Models\Branch;
 use App\Models\Tenant;
 use App\Services\Cash\CashSetupService;
+use App\Services\Expenses\ExpenseCategoryService;
 use App\Services\Permissions\PermissionSynchronizer;
 use App\Services\Permissions\RoleProvisioner;
 use App\Services\Users\UserService;
@@ -28,6 +29,7 @@ class TenantProvisioner
         private readonly RoleProvisioner $roles,
         private readonly UserService $users,
         private readonly CashSetupService $cash,
+        private readonly ExpenseCategoryService $expenseCategories,
     ) {}
 
     public function provision(TenantProvisioningData $data): ProvisionedTenant
@@ -51,6 +53,7 @@ class TenantProvisioner
 
                 $this->roles->provision($tenant);
                 $this->cash->provisionDefaults($branch);
+                $this->expenseCategories->provisionDefaults($tenant);
 
                 $owner = $this->users->create(
                     attributes: [

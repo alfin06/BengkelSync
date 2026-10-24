@@ -47,6 +47,7 @@ enum RoleName: string
     {
         return Permission::allExcept([
             Permission::BillingManage,
+            Permission::ExpenseViewRestricted,
             Permission::RoleView,
             Permission::RoleCreate,
             Permission::RoleUpdate,
@@ -94,6 +95,9 @@ enum RoleName: string
             Permission::SupplierView,
             Permission::SupplierCreate,
             Permission::CashView,
+            // Pilot decision: small expenses from cash, up to the branch limit.
+            Permission::ExpenseView,
+            Permission::ExpenseCreateCash,
             Permission::DashboardView,
         ];
     }
@@ -125,10 +129,10 @@ enum RoleName: string
             Permission::SupplierPaymentDelete,
             Permission::CashTransfer,
             Permission::CashAdjust,
-            Permission::ExpenseView,
             Permission::ExpenseCreate,
             Permission::ExpenseUpdate,
             Permission::ExpenseDelete,
+            Permission::ExpenseManageCategories,
             Permission::DashboardViewFinancials,
             Permission::ReportView,
         ];

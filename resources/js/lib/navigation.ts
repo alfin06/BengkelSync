@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { ClipboardList, FileText, HandCoins, Hourglass, UserCog, Receipt, Wrench, HardHat, LayoutDashboard, Package, ReceiptText, Settings, Truck, UsersRound, Wallet } from 'lucide-vue-next';
+import { ClipboardList, FileText, HandCoins, Hourglass, Receipt as ReceiptIcon, UserCog, Receipt, Wrench, HardHat, LayoutDashboard, Package, ReceiptText, Settings, Truck, UsersRound, Wallet } from 'lucide-vue-next';
 
 export interface NavItem {
     /** Translation key of the label */
@@ -89,6 +89,14 @@ export const navigation: NavItem[] = [
         activePattern: 'suppliers.*',
         icon: Truck,
         permission: 'supplier.view',
+        primary: false,
+    },
+    {
+        label: 'nav.expenses',
+        route: 'expenses.index',
+        activePattern: 'expenses.*',
+        icon: ReceiptIcon,
+        permission: 'expense.view',
         primary: false,
     },
     {

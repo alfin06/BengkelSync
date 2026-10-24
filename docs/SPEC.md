@@ -30,6 +30,7 @@ Actions: `view, create, update, delete`, plus:
 - `supplier_payment.on_receipt` (pay a purchase in full when it arrives, from the cash drawer or petty cash, up to the branch's cash purchase limit; for staff without `supplier_payment.create`)
 - `cash.transfer` (move money between cash accounts, e.g. topping up petty cash), `cash.adjust` (correct a balance after a cash count)
 - `dashboard.view_financials`
+- `expense.create_cash` (record expenses only from the cash drawer or petty cash, up to the branch's Front Desk cash limit), `expense.view_restricted` (see and change expenses in restricted categories such as salaries; Owner only by default), `expense.manage_categories`
 - `audit_log.view` (read the audit log)
 - `billing.manage` (subscription, owner only)
 
@@ -119,7 +120,10 @@ Status flow: `draft → queued → in_progress ⇄ waiting_parts → completed �
 - **Paying on the spot** (pilot decision): staff with `supplier_payment.on_receipt` but not `supplier_payment.create` may only pay the full amount, from the cash drawer or petty cash, when the total is at most `branches.cash_purchase_limit` (default Rp 500.000; empty = no limit; set in branch payment settings with `branch.update`). Larger bills are saved unpaid and go to supplier debt.
 - **Due reminders**: a daily job (`purchases:notify-due`, 07:00 Asia/Jakarta) sends a bell notification 3 days before the due date and one when a bill is overdue, once each, to active users of the branch with `supplier_payment.create`.
 
-**expense_categories**: id, name; **expenses** [branch]: date, category_id, description, amount, cash_account_id (which account paid; e.g. petty cash), attachment_path (private disk), created_by. Writes an `expense` cash movement.
+**expense_categories**: id, name, is_restricted, is_active, sort (per tenant; defaults: Bensin & transport, Makan & minum, ATK & kebersihan, Listrik/air/internet, Perawatan alat, Gaji & bonus (restricted), Lain-lain); **expenses** [branch]: expense_date, category_id, description, amount, cash_account_id (which account paid; e.g. petty cash), attachment_path (receipt photo, private disk), created_by, voided_at, void_reason, voided_by. Writes an `expense` cash movement.
+- Description, category, date and photo can be edited (`expense.update`, audited); a wrong amount or account is voided with a reason (`expense.delete`, reversing cash movement) and recorded again. Nothing is deleted.
+- Restricted categories (salaries) are invisible without `expense.view_restricted`: not in lists, totals or category pickers, and their cash movements only say "Pengeluaran (rahasia)". The amount still shows in the cash account history, so balances stay right.
+- Front Desk (`expense.create_cash`) records only from cash, up to the branch cash limit shared with on-the-spot purchases.
 
 **document_sequences** [branch]: type (WO|INV|KW|PB), year, last_number. Locked during increment.
 **audit_logs**: user_id, branch_id (nullable), action, auditable_type, auditable_id, old_values (JSON), new_values (JSON), reason, ip, created_at
@@ -236,7 +240,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Invoice editing with reason + revisions
 
 ### MVP — Phase 2: Management
-- [ ] Expenses + receipt upload (paid from a cash account, e.g. petty cash)
+- [x] Expenses + receipt upload (paid from a cash account, e.g. petty cash)
 - [ ] Petty cash: transfers between cash accounts, cash count / adjustment, balances on the dashboard
 - [ ] Dashboard (single branch view)
 - [x] User management (owner creates users with a password) + role/permission matrix UI
@@ -280,6 +284,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Expenses: Front Desk records small cash expenses up to the branch limit; "Gaji & bonus" is restricted to the Owner; categories are managed by Owner and Finance; no rent category (the shop owns its place) (2026-10-24).
 - Invoice editing: Front Desk may correct unpaid invoices; invoices with payments need Finance (`invoice.update_paid`) (2026-10-24).
 - Payments: a due date is required when part stays unpaid; customer debt list with reminders; kwitansi on A5; Finance may cancel single payment lines, never deleting them (2026-10-24).
 - Invoices: A5 on 2-ply paper; "Pelanggan umum" for counter sales; the branch manager decides whether invoices carry tax; Front Desk may give discounts for now (2026-10-24).

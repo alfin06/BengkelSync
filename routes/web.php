@@ -11,6 +11,8 @@ use App\Http\Controllers\Customers\VehicleController;
 use App\Http\Controllers\Customers\VehicleLookupController;
 use App\Http\Controllers\Customers\VehicleOwnerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Expenses\ExpenseCategoryController;
+use App\Http\Controllers\Expenses\ExpenseController;
 use App\Http\Controllers\Inventory\PartController;
 use App\Http\Controllers\Inventory\PartLookupController;
 use App\Http\Controllers\Inventory\PartStockController;
@@ -121,6 +123,15 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::post('/purchases/{purchase}/void', [PurchaseController::class, 'void'])->name('purchases.void');
     Route::post('/purchases/{purchase}/payments', [SupplierPaymentController::class, 'store'])->name('purchases.payments.store');
     Route::post('/supplier-payments/{supplier_payment}/void', [SupplierPaymentController::class, 'void'])->name('supplier-payments.void');
+
+    // Expenses of the active branch, paid from its cash accounts
+    Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+    Route::post('/expenses/{expense}/void', [ExpenseController::class, 'void'])->name('expenses.void');
+    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'receipt'])->name('expenses.receipt');
+    Route::post('/expense-categories', [ExpenseCategoryController::class, 'store'])->name('expense-categories.store');
+    Route::put('/expense-categories/{expense_category}', [ExpenseCategoryController::class, 'update'])->name('expense-categories.update');
 
     // Cash ("Kas") of the active branch
     Route::get('/cash', [CashController::class, 'index'])->name('cash.index');

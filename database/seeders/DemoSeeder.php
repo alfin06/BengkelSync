@@ -7,17 +7,20 @@ use App\Enums\WorkOrderStatus;
 use App\Models\Branch;
 use App\Models\CashAccount;
 use App\Models\Customer;
+use App\Models\ExpenseCategory;
 use App\Models\Invoice;
 use App\Models\Mechanic;
 use App\Models\Part;
 use App\Models\PaymentMethod;
 use App\Models\ServiceItem;
 use App\Models\Supplier;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Services\Cash\CashService;
 use App\Services\Cash\CashSetupService;
 use App\Services\Customers\VehicleService;
+use App\Services\Expenses\ExpenseService;
 use App\Services\Inventory\StockService;
 use App\Services\Invoicing\InvoiceService;
 use App\Services\Payments\PaymentService;
@@ -86,6 +89,7 @@ class DemoSeeder extends Seeder
             $this->purchases();
             $this->workOrders();
             $this->invoices();
+            $this->expenses();
         });
 
         $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
@@ -132,6 +136,38 @@ class DemoSeeder extends Seeder
         $cash->countTo($petty, 300_000, __('stock.opening_balance'));
         $cash->countTo($anton, 25_000_000, __('stock.opening_balance'));
         $cash->transfer($drawer, $petty, 200_000, 'Isi kas kecil');
+    }
+
+    /**
+     * A few everyday expenses from petty cash and the drawer, and one salary from the bank
+     * (restricted: only the owner sees it).
+     */
+    private function expenses(): void
+    {
+        $service = app(ExpenseService::class);
+        $owner = User::query()->where('email', 'owner@demo.test')->firstOrFail();
+        $category = fn (string $name): int => ExpenseCategory::query()->where('name', $name)->value('id');
+        $account = fn (string $type): int => CashAccount::query()->where('type', $type)->orderBy('id')->value('id');
+        $day = fn (int $daysAgo): string => now('Asia/Jakarta')->subDays($daysAgo)->toDateString();
+
+        $entries = [
+            [$day(3), 'Bensin & transport', 'Bensin motor antar part ke pelanggan', 30_000, 'petty_cash'],
+            [$day(2), 'Makan & minum', 'Galon air minum', 22_000, 'petty_cash'],
+            [$day(1), 'ATK & kebersihan', 'Kertas nota 2-ply dan lakban', 65_000, 'cash_drawer'],
+            [$day(0), 'Bensin & transport', 'Parkir dan tol ambil oli', 18_000, 'petty_cash'],
+        ];
+
+        foreach ($entries as [$date, $name, $description, $amount, $type]) {
+            $service->create($owner, ['expense_date' => $date, 'category_id' => $category($name), 'description' => $description, 'amount' => $amount, 'cash_account_id' => $account($type)]);
+        }
+
+        $service->create($owner, [
+            'expense_date' => $day(1),
+            'category_id' => $category('Gaji & bonus'),
+            'description' => 'Bonus mingguan mekanik',
+            'amount' => 500_000,
+            'cash_account_id' => CashAccount::query()->where('name', 'BCA Anton')->value('id'),
+        ]);
     }
 
     /**
