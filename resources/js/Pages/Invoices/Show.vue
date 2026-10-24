@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Ban, Printer } from 'lucide-vue-next';
+import { Ban, Banknote, Printer } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InvoiceStatusBadge from '@/Components/Invoices/InvoiceStatusBadge.vue';
+import CheckoutDialog from '@/Components/Payments/CheckoutDialog.vue';
 import { Button, buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import ConfirmDialog from '@/Components/ui/ConfirmDialog.vue';
@@ -10,12 +11,47 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { Invoice } from '@/types/invoices';
+import type { Invoice, PaymentMethodOption, Receipt, ReceiptLine } from '@/types/invoices';
 
 const props = defineProps<{
     invoice: Invoice;
-    can: { void: boolean };
+    receipts: Receipt[];
+    methods: PaymentMethodOption[];
+    today: string;
+    suggestedDueDate: string;
+    can: { void: boolean; pay: boolean; voidPayment: boolean };
 }>();
+
+const payOpen = ref(false);
+
+// Cancelling one line or a whole kwitansi (Finance, with a reason). Nothing is deleted.
+const lineToVoid = ref<ReceiptLine | null>(null);
+const receiptToVoid = ref<Receipt | null>(null);
+const paymentVoidOpen = ref(false);
+const paymentVoiding = ref(false);
+
+function askVoidLine(line: ReceiptLine): void {
+    lineToVoid.value = line;
+    receiptToVoid.value = null;
+    paymentVoidOpen.value = true;
+}
+
+function askVoidReceipt(receipt: Receipt): void {
+    receiptToVoid.value = receipt;
+    lineToVoid.value = null;
+    paymentVoidOpen.value = true;
+}
+
+function voidPayment(reason: string | null): void {
+    const url = lineToVoid.value ? route('payments.void', lineToVoid.value.id) : route('receipts.void', receiptToVoid.value?.id ?? 0);
+
+    router.post(url, { reason }, {
+        preserveScroll: true,
+        onStart: () => (paymentVoiding.value = true),
+        onFinish: () => (paymentVoiding.value = false),
+        onSuccess: () => (paymentVoidOpen.value = false),
+    });
+}
 
 const voidOpen = ref(false);
 const voiding = ref(false);
@@ -34,6 +70,7 @@ function voidInvoice(reason: string | null): void {
     <AppLayout>
         <PageHeader :title="invoice.number" :description="invoice.customer?.name ?? $t('invoices.walk_in_customer')">
             <template #actions>
+                <Button v-if="can.pay" @click="payOpen = true"><Banknote aria-hidden="true" /> {{ $t('payments.pay') }}</Button>
                 <a :href="route('invoices.print', invoice.id)" target="_blank" rel="noopener" :class="buttonVariants({ variant: 'outline' })">
                     <Printer aria-hidden="true" /> {{ $t('invoices.print') }}
                 </a>
@@ -109,7 +146,64 @@ function voidInvoice(reason: string | null): void {
                     <p v-if="invoice.notes" class="whitespace-pre-line border-t pt-3">{{ invoice.notes }}</p>
                 </CardContent>
             </Card>
+
+            <Card class="lg:col-span-2">
+                <CardHeader><CardTitle>{{ $t('payments.history') }}</CardTitle></CardHeader>
+                <CardContent class="grid gap-3">
+                    <p v-if="receipts.length === 0" class="text-sm text-muted-foreground">{{ $t('payments.none') }}</p>
+                    <div v-for="receipt in receipts" :key="receipt.id" class="rounded-md border text-sm">
+                        <div class="flex flex-wrap items-center gap-2 border-b px-3 py-2">
+                            <span class="flex-1">
+                                <span class="font-medium">{{ formatDate(receipt.paid_on) }} · {{ receipt.number }}</span>
+                                <span v-if="receipt.received_by" class="block text-xs text-muted-foreground">{{ receipt.received_by }}</span>
+                            </span>
+                            <span :class="cn('font-semibold tabular-nums', receipt.fully_voided && 'text-muted-foreground line-through')">{{ receipt.amount_label }}</span>
+                            <a :href="route('receipts.print', receipt.id)" target="_blank" rel="noopener" :class="buttonVariants({ variant: 'ghost', size: 'sm' })">
+                                <Printer aria-hidden="true" /> {{ $t('payments.print') }}
+                            </a>
+                            <Button v-if="can.voidPayment && !receipt.fully_voided" variant="ghost" size="sm" class="text-destructive" @click="askVoidReceipt(receipt)">
+                                {{ $t('payments.void_receipt') }}
+                            </Button>
+                        </div>
+                        <ul class="divide-y">
+                            <li v-for="line in receipt.lines" :key="line.id" class="flex items-start gap-3 px-3 py-2">
+                                <span :class="cn('min-w-0 flex-1', line.voided && 'text-muted-foreground')">
+                                    <span class="block">{{ line.method }}<template v-if="line.reference"> · {{ line.reference }}</template></span>
+                                    <span v-if="line.surcharge_label" class="block text-xs text-muted-foreground">{{ $t('payments.surcharge') }} {{ line.surcharge_label }}</span>
+                                    <span v-if="line.voided" class="block text-xs text-destructive">
+                                        {{ $t('payments.voided_notice', { reason: line.void_reason ?? '', by: line.voided_by ?? '', at: line.voided_at_label ?? '' }) }}
+                                    </span>
+                                </span>
+                                <span class="text-right">
+                                    <span :class="cn('block tabular-nums', line.voided && 'text-muted-foreground line-through')">{{ line.amount_label }}</span>
+                                    <button
+                                        v-if="can.voidPayment && !line.voided"
+                                        type="button"
+                                        class="mt-1 text-xs font-medium text-destructive underline-offset-4 hover:underline"
+                                        @click="askVoidLine(line)"
+                                    >
+                                        {{ $t('payments.void_line') }}
+                                    </button>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
+
+        <CheckoutDialog v-if="can.pay" v-model:open="payOpen" :invoice="invoice" :methods="methods" :today="today" :suggested-due-date="suggestedDueDate" />
+
+        <ConfirmDialog
+            v-model:open="paymentVoidOpen"
+            :title="lineToVoid ? $t('payments.void_line_title', { method: lineToVoid.method, amount: lineToVoid.amount_label }) : $t('payments.void_receipt_title', { number: receiptToVoid?.number ?? '' })"
+            :description="$t('payments.void_description')"
+            :confirm-label="lineToVoid ? $t('payments.void_line') : $t('payments.void_receipt')"
+            destructive
+            require-reason
+            :processing="paymentVoiding"
+            @confirm="voidPayment"
+        />
 
         <ConfirmDialog
             v-model:open="voidOpen"

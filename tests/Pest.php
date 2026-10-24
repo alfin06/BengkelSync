@@ -2,6 +2,7 @@
 
 use App\Enums\RoleName;
 use App\Enums\StockMovementType;
+use App\Enums\WorkOrderStatus;
 use App\Models\Branch;
 use App\Models\CashAccount;
 use App\Models\Customer;
@@ -14,6 +15,7 @@ use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
+use App\Services\Invoicing\InvoiceService;
 use App\Services\Tenancy\ProvisionedTenant;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TenantProvisioningData;
@@ -216,4 +218,48 @@ function stockedPart(ProvisionedTenant $shop, int $qty = 1000, array $attributes
     stock($shop, fn (StockService $stock) => $stock->move($part, StockMovementType::Adjustment, $qty));
 
     return $part;
+}
+
+function invoices(ProvisionedTenant $shop, callable $callback): mixed
+{
+    return inTenant($shop->tenant, $shop->branch, fn () => $callback(app(InvoiceService::class)));
+}
+
+/**
+ * A completed work order with one job (Rp 100.000) and 2 pcs of a part at Rp 50.000.
+ */
+function completedWorkOrder(ProvisionedTenant $shop): WorkOrder
+{
+    $part = stockedPart($shop);
+    $workOrder = workOrderIn($shop);
+
+    workOrders($shop, function (WorkOrderService $service) use ($workOrder, $part) {
+        $service->addService($workOrder, ['description' => 'Ganti kampas rem', 'qty' => 1, 'unit_price' => 100_000]);
+        $service->addPart($workOrder, $part, 200, 50_000);
+        $service->changeStatus($workOrder, WorkOrderStatus::Completed);
+    });
+
+    return $workOrder;
+}
+
+/**
+ * The price list of a work order as the invoice form sends it.
+ *
+ * @return list<array{source: string, id: int, unit_price: int, discount_amount: int}>
+ */
+function pricesOf(ProvisionedTenant $shop, WorkOrder $workOrder, array $override = []): array
+{
+    return inTenant($shop->tenant, $shop->branch, function () use ($workOrder, $override) {
+        $workOrder->load(['services', 'parts']);
+
+        return [
+            ...$workOrder->services->map(fn ($line) => ['source' => 'service', 'id' => $line->id, 'unit_price' => $line->unit_price, 'discount_amount' => 0, ...($override['service'] ?? [])])->all(),
+            ...$workOrder->parts->map(fn ($line) => ['source' => 'part', 'id' => $line->id, 'unit_price' => $line->unit_price, 'discount_amount' => 0, ...($override['part'] ?? [])])->all(),
+        ];
+    });
+}
+
+function invoiceInput(array $overrides = []): array
+{
+    return ['issue_date' => now('Asia/Jakarta')->toDateString(), 'discount_amount' => 0, ...$overrides];
 }

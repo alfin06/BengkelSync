@@ -263,5 +263,9 @@ return [
         'tax_rate' => 'tarif pajak',
         'tax_inclusive' => 'harga jual',
         'invoice_footer' => 'catatan kaki',
+        'lines.*.payment_method_id' => 'metode pembayaran',
+        'lines.*.amount' => 'jumlah',
+        'lines.*.cash_tendered' => 'uang diterima',
+        'lines.*.reference' => 'no. referensi',
     ],
 ];

@@ -7,8 +7,10 @@ use App\Enums\WorkOrderStatus;
 use App\Models\Branch;
 use App\Models\CashAccount;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Mechanic;
 use App\Models\Part;
+use App\Models\PaymentMethod;
 use App\Models\ServiceItem;
 use App\Models\Supplier;
 use App\Models\Vehicle;
@@ -18,6 +20,7 @@ use App\Services\Cash\CashSetupService;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
 use App\Services\Invoicing\InvoiceService;
+use App\Services\Payments\PaymentService;
 use App\Services\Purchasing\PurchaseService;
 use App\Services\Purchasing\SupplierPaymentService;
 use App\Services\Tenancy\TenantProvisioner;
@@ -147,8 +150,23 @@ class DemoSeeder extends Seeder
         ]);
 
         $oil = Part::query()->where('sku', 'OLI-HLX-1040')->firstOrFail();
-        $invoices->createWalkIn(null, ['issue_date' => $today], [
+        $counterSale = $invoices->createWalkIn(null, ['issue_date' => $today], [
             ['type' => 'part', 'part_id' => $oil->id, 'qty' => 100, 'unit_price' => $oil->sell_price],
+        ]);
+
+        // Payments: the work order's invoice part paid with cash + QRIS (rest due in a week),
+        // the counter sale paid in cash with change.
+        $payments = app(PaymentService::class);
+        $methods = PaymentMethod::query()->with('account')->get()->keyBy('name');
+        $workOrderInvoice = Invoice::query()->whereNotNull('work_order_id')->firstOrFail();
+
+        $payments->checkout($workOrderInvoice, $today, [
+            ['method' => $methods['Tunai'], 'amount' => 100_000, 'cash_tendered' => 100_000],
+            ['method' => $methods['QRIS BCA'], 'amount' => 150_000],
+        ], now('Asia/Jakarta')->addDays(7)->toDateString());
+
+        $payments->checkout($counterSale, $today, [
+            ['method' => $methods['Tunai'], 'amount' => $counterSale->total, 'cash_tendered' => 100_000],
         ]);
     }
 

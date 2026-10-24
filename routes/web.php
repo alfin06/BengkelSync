@@ -20,6 +20,8 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mechanics\MechanicController;
 use App\Http\Controllers\Mechanics\MechanicKtpController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Payments\CustomerDebtController;
+use App\Http\Controllers\Payments\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseController;
 use App\Http\Controllers\Purchasing\SupplierDebtController;
@@ -85,6 +87,13 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
     Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
+
+    // Customer payments: several methods per checkout (one kwitansi), and customer debt
+    Route::get('/customer-debts', CustomerDebtController::class)->name('customer-debts.index');
+    Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])->name('invoices.payments.store');
+    Route::post('/payments/{payment}/void', [PaymentController::class, 'voidPayment'])->name('payments.void');
+    Route::post('/receipts/{receipt}/void', [PaymentController::class, 'voidReceipt'])->name('receipts.void');
+    Route::get('/receipts/{receipt}/print', [PaymentController::class, 'print'])->name('receipts.print');
 
     // Service catalog (tenant-wide price list of jobs)
     Route::resource('service-items', ServiceItemController::class)->only(['index', 'store', 'update', 'destroy']);

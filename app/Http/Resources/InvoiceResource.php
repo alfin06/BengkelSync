@@ -8,6 +8,7 @@ use App\Support\BranchTime;
 use App\Support\Money;
 use App\Support\Phone;
 use App\Support\Quantity;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,6 +31,7 @@ class InvoiceResource extends JsonResource
             'number' => $this->number,
             'issue_date' => $this->issue_date->toDateString(),
             'due_date' => $this->due_date?->toDateString(),
+            'is_overdue' => $this->due_date !== null && $this->outstanding() > 0 && $this->due_date->toDateString() < app(TenantContext::class)->today(),
             'customer' => $this->customer === null ? null : [
                 'id' => $this->customer->id,
                 'name' => $this->customer->name,

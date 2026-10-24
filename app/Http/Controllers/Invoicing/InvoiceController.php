@@ -2,22 +2,29 @@
 
 namespace App\Http\Controllers\Invoicing;
 
+use App\Enums\Permission;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Invoicing\StoreInvoiceRequest;
 use App\Http\Requests\Invoicing\VoidInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\PaymentMethod;
+use App\Models\PaymentReceipt;
 use App\Models\ServiceItem;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderPart;
 use App\Models\WorkOrderServiceLine;
 use App\Services\Invoicing\InvoiceService;
+use App\Support\BranchTime;
+use App\Support\Money;
 use App\Support\Quantity;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -96,15 +103,55 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.show', $invoice)->with('success', __('invoices.created', ['number' => $invoice->number]));
     }
 
-    public function show(Request $request, Invoice $invoice): Response
+    public function show(Request $request, Invoice $invoice, TenantContext $context): Response
     {
         Gate::authorize('view', $invoice);
 
-        $invoice->load(['customer', 'workOrder.vehicle', 'lines.part']);
+        /** @var User $user */
+        $user = $request->user();
+        $invoice->load(['customer', 'workOrder.vehicle', 'lines.part', 'receipts.payments.method', 'receipts.payments.voider', 'receipts.receiver']);
+        $canPay = $user->can('pay', $invoice);
+        $today = $context->today();
 
         return Inertia::render('Invoices/Show', [
             'invoice' => InvoiceResource::make($invoice)->resolve($request),
-            'can' => ['void' => $request->user()?->can('void', $invoice) ?? false],
+            'receipts' => $invoice->receipts->map(fn (PaymentReceipt $receipt) => [
+                'id' => $receipt->id,
+                'number' => $receipt->number,
+                'paid_on' => $receipt->paid_on->toDateString(),
+                'amount_label' => Money::format($receipt->activeAmount()),
+                'received_by' => $receipt->receiver?->name,
+                'fully_voided' => $receipt->isFullyVoided(),
+                'lines' => $receipt->payments->map(fn (Payment $payment) => [
+                    'id' => $payment->id,
+                    'method' => $payment->method->name,
+                    'amount_label' => Money::format($payment->amount),
+                    'surcharge_label' => $payment->surcharge_amount > 0 ? Money::format($payment->surcharge_amount) : null,
+                    'reference' => $payment->reference,
+                    'voided' => $payment->isVoided(),
+                    'void_reason' => $payment->void_reason,
+                    'voided_by' => $payment->voider?->name,
+                    'voided_at_label' => BranchTime::label($payment->voided_at),
+                ])->all(),
+            ])->all(),
+            // The "Bayar" dialog: the branch's active methods, today, and a due date to
+            // suggest when part stays unpaid (the invoice's own, else in 7 days).
+            'methods' => $canPay
+                ? PaymentMethod::query()->where('is_active', true)->orderBy('sort')->orderBy('name')->get()->map(fn (PaymentMethod $method) => [
+                    'id' => $method->id,
+                    'name' => $method->name,
+                    'type' => $method->type->value,
+                    'surcharge_percent' => $method->surcharge_percent,
+                    'needs_reference' => $method->needs_reference,
+                ])->all()
+                : [],
+            'today' => $today,
+            'suggestedDueDate' => $invoice->due_date?->toDateString() ?? Carbon::parse($today)->addDays(7)->toDateString(),
+            'can' => [
+                'void' => $user->can('void', $invoice),
+                'pay' => $canPay,
+                'voidPayment' => $user->can(Permission::PaymentDelete->value),
+            ],
         ]);
     }
 

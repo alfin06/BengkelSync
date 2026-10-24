@@ -45,6 +45,22 @@ class InvoicePolicy
     }
 
     /**
+     * Take a payment ("Bayar").
+     */
+    public function pay(User $user, Invoice $invoice): bool
+    {
+        return $user->can(Permission::PaymentCreate->value) && $invoice->outstanding() > 0;
+    }
+
+    /**
+     * The customer-debt list ("Piutang pelanggan").
+     */
+    public function viewDebts(User $user): bool
+    {
+        return $user->can(Permission::PaymentView->value);
+    }
+
+    /**
      * Cancel an invoice made by mistake; only while nothing is paid.
      */
     public function void(User $user, Invoice $invoice): bool

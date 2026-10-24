@@ -41,3 +41,8 @@ export function invoiceTotals(lineTotals: number[], discount: number, taxEnabled
 
     return { subtotal, discount: safeDiscount, tax, total: base + tax };
 }
+
+/** A percentage of an amount, rounded half up, like Money::percentOf() (e.g. a card surcharge) */
+export function percentOf(amount: number, rate: string): number {
+    return divideHalfUp(Math.max(amount, 0) * basisPoints(rate), 10_000);
+}

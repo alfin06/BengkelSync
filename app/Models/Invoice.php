@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $customer_id null = "Pelanggan umum"
  * @property Carbon $issue_date
  * @property Carbon|null $due_date
+ * @property Carbon|null $due_soon_notified_at
+ * @property Carbon|null $overdue_notified_at
  * @property int $subtotal
  * @property int $discount_amount
  * @property bool $tax_enabled
@@ -45,6 +47,7 @@ use Illuminate\Support\Carbon;
  * @property-read WorkOrder|null $workOrder
  * @property-read Branch $branch
  * @property-read Collection<int, InvoiceLine> $lines
+ * @property-read Collection<int, PaymentReceipt> $receipts
  */
 class Invoice extends Model
 {
@@ -58,6 +61,9 @@ class Invoice extends Model
         'notes',
     ];
 
+    /** @var list<string> */
+    protected array $auditExclude = ['due_soon_notified_at', 'overdue_notified_at'];
+
     /**
      * Same defaults as the database, so a freshly created model has every attribute.
      *
@@ -67,6 +73,8 @@ class Invoice extends Model
         'work_order_id' => null,
         'customer_id' => null,
         'due_date' => null,
+        'due_soon_notified_at' => null,
+        'overdue_notified_at' => null,
         'subtotal' => 0,
         'discount_amount' => 0,
         'tax_enabled' => false,
@@ -90,6 +98,8 @@ class Invoice extends Model
         return [
             'issue_date' => 'date',
             'due_date' => 'date',
+            'due_soon_notified_at' => 'datetime',
+            'overdue_notified_at' => 'datetime',
             'subtotal' => 'integer',
             'discount_amount' => 'integer',
             'tax_enabled' => 'boolean',
@@ -131,6 +141,16 @@ class Invoice extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(InvoiceLine::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * Checkouts (kwitansi), oldest first.
+     *
+     * @return HasMany<PaymentReceipt, $this>
+     */
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(PaymentReceipt::class)->orderBy('paid_on')->orderBy('id');
     }
 
     /**

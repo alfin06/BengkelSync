@@ -18,6 +18,8 @@ export interface Invoice {
     number: string;
     issue_date: string;
     due_date: string | null;
+    /** Not fully paid and past its due date (branch time) */
+    is_overdue: boolean;
     /** null = "Pelanggan umum" */
     customer: { id: number; name: string; phone: string | null; address: string | null } | null;
     work_order: { id: number; number: string; odometer_in: number | null } | null;
@@ -78,4 +80,38 @@ export interface WalkInLine {
     qty: string;
     unit_price: number | null;
     discount_amount: number | null;
+}
+
+/** A payment method offered in the "Bayar" dialog */
+export interface PaymentMethodOption {
+    id: number;
+    name: string;
+    type: 'cash' | 'transfer' | 'qris' | 'debit' | 'credit_card' | 'other';
+    /** e.g. "3.00" */
+    surcharge_percent: string;
+    needs_reference: boolean;
+}
+
+export interface ReceiptLine {
+    id: number;
+    method: string;
+    amount_label: string;
+    surcharge_label: string | null;
+    reference: string | null;
+    voided: boolean;
+    void_reason: string | null;
+    voided_by: string | null;
+    voided_at_label: string | null;
+}
+
+/** One checkout (kwitansi) of an invoice */
+export interface Receipt {
+    id: number;
+    number: string;
+    paid_on: string;
+    /** Still counted: cancelled lines excluded */
+    amount_label: string;
+    received_by: string | null;
+    fully_voided: boolean;
+    lines: ReceiptLine[];
 }

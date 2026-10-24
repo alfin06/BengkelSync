@@ -103,5 +103,9 @@ return [
         'tax_rate' => 'tax rate',
         'tax_inclusive' => 'selling prices',
         'invoice_footer' => 'footer',
+        'lines.*.payment_method_id' => 'payment method',
+        'lines.*.amount' => 'amount',
+        'lines.*.cash_tendered' => 'cash received',
+        'lines.*.reference' => 'reference no.',
     ],
 ];

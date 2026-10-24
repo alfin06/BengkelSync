@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PartUnit;
 use App\Models\User;
+use App\Notifications\InvoiceDueNotification;
 use App\Notifications\PurchaseDueNotification;
 use App\Support\Money;
 use App\Support\Quantity;
@@ -65,6 +66,7 @@ class NotificationController extends Controller
 
         [$title, $body, $url] = match ($data['kind'] ?? 'low_stock') {
             PurchaseDueNotification::DUE_SOON, PurchaseDueNotification::OVERDUE => $this->purchaseDue($data),
+            InvoiceDueNotification::DUE_SOON, InvoiceDueNotification::OVERDUE => $this->invoiceDue($data),
             default => $this->lowStock($data),
         };
 
@@ -95,6 +97,28 @@ class NotificationController extends Controller
                 'branch' => (string) ($data['branch_name'] ?? ''),
             ]),
             route('parts.show', (int) ($data['part_id'] ?? 0)),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{string, string, string}
+     */
+    private function invoiceDue(array $data): array
+    {
+        $key = $data['kind'] === InvoiceDueNotification::OVERDUE ? 'overdue' : 'due_soon';
+        $due = isset($data['due_date']) ? Carbon::parse((string) $data['due_date'])->translatedFormat('j M Y') : '';
+        $customer = isset($data['customer_name']) ? (string) $data['customer_name'] : __('invoices.walk_in_customer');
+
+        return [
+            __("notifications.invoice_{$key}.title", ['customer' => $customer]),
+            __("notifications.invoice_{$key}.body", [
+                'number' => (string) ($data['number'] ?? ''),
+                'amount' => Money::format((int) ($data['outstanding'] ?? 0)),
+                'date' => $due,
+                'branch' => (string) ($data['branch_name'] ?? ''),
+            ]),
+            route('invoices.show', (int) ($data['invoice_id'] ?? 0)),
         ];
     }
 

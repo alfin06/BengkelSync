@@ -86,8 +86,11 @@ Status flow: `draft → queued → in_progress ⇄ waiting_parts → completed �
 **invoice_revisions**: invoice_id, revision_no, snapshot (JSON of header + lines), reason, edited_by, created_at
 
 **Customer payments (several methods in one checkout).** A customer can pay one invoice with any mix of methods at once (e.g. Rp 500.000 cash + the rest by QRIS), and can pay in instalments over time.
-**payment_receipts** [branch]: id, number (`KW`), invoice_id, paid_at, amount (sum of its lines, excl. surcharge), surcharge_total, received_by, note. One receipt = one checkout = one printed kwitansi.
-**payments** [branch]: receipt_id, invoice_id, payment_method_id, amount (applied to the invoice), surcharge_amount, cash_tendered (cash only; change = tendered − amount), reference (transfer ref, card approval code). Each line writes a `cash_movements` row into its method's cash account.
+**payment_receipts** [branch]: id, number (`KW`), invoice_id, paid_on, amount (sum of its lines, excl. surcharge), surcharge_total, received_by, note. One receipt = one checkout = one printed kwitansi (A5, with the amount in words).
+**payments** [branch]: receipt_id, invoice_id, payment_method_id, cash_account_id and surcharge_percent (copied from the method), amount (applied to the invoice), surcharge_amount, cash_tendered (cash only; change = tendered − amount − surcharge), reference (transfer ref, card approval code), voided_at, void_reason, voided_by. Each line writes a `cash_movements` row (amount + surcharge) into its method's cash account.
+- Later checkouts may use any methods, different from earlier ones. When part stays unpaid, the checkout requires a due date for the rest (prefilled with the invoice's due date, else 7 days ahead); a new due date re-arms the reminders.
+- **Corrections** (`payment.delete`, with a reason): Finance cancels one line or every line of a kwitansi. Lines are never deleted: they stay, marked cancelled (who, when, why), and a reversing cash movement takes the money out again. The invoice status follows; a fully paid work order is `closed` and goes back to `invoiced` when a payment is cancelled.
+- **Customer debt ("Piutang pelanggan")**: unpaid invoices, nearest due date first, with bell reminders 3 days before the due date and when overdue (`invoices:notify-due`, daily 07:00) to users with `payment.create` in the branch.
 - The sum of lines may not exceed the invoice's outstanding balance. Overpayment is only possible as cash change.
 - Card surcharge is stored on the payment line, not as an invoice line, so paying never changes an issued invoice. It is reported as surcharge income.
 
@@ -225,7 +228,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Cash accounts, payment methods, CashService
 - [x] Work orders with status flow, task checklist, and mechanic assignment
 - [x] Invoices (from work order and walk-in), optional tax, print/PDF
-- [ ] Customer payments with several methods per checkout, card surcharge, kwitansi
+- [x] Customer payments with several methods per checkout, card surcharge, kwitansi
 - [ ] Invoice editing with reason + revisions
 
 ### MVP — Phase 2: Management
@@ -273,6 +276,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Payments: a due date is required when part stays unpaid; customer debt list with reminders; kwitansi on A5; Finance may cancel single payment lines, never deleting them (2026-10-24).
 - Invoices: A5 on 2-ply paper; "Pelanggan umum" for counter sales; the branch manager decides whether invoices carry tax; Front Desk may give discounts for now (2026-10-24).
 - Work orders: parts leave stock when added; Front Desk and Finance type or change line prices; a draft status is kept for estimates; the job sheet (SPK) is printable (2026-10-24).
 - Supplier payables, petty cash, and customer payments with several methods in one checkout are in MVP scope (section 4).

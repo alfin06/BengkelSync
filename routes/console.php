@@ -10,3 +10,10 @@ Schedule::command('purchases:notify-due')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Customer-debt ("Piutang") bell reminders, same time.
+Schedule::command('invoices:notify-due')
+    ->dailyAt('07:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping()
+    ->onOneServer();
