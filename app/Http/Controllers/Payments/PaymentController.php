@@ -92,6 +92,7 @@ class PaymentController extends Controller
                 'name' => $receipt->branch->name,
                 'address' => $receipt->branch->address,
                 'phone' => $receipt->branch->phone,
+                'logo_url' => $receipt->branch->logoUrl(),
             ],
         ]);
     }

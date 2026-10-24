@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Ban, Banknote, History, Pencil, Printer } from 'lucide-vue-next';
+import { Ban, Banknote, History, Lock, Pencil, Printer } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InvoiceStatusBadge from '@/Components/Invoices/InvoiceStatusBadge.vue';
 import CheckoutDialog from '@/Components/Payments/CheckoutDialog.vue';
@@ -18,6 +18,8 @@ const props = defineProps<{
     receipts: Receipt[];
     methods: PaymentMethodOption[];
     today: string;
+    /** Older than the shop's lock period */
+    locked: boolean;
     suggestedDueDate: string;
     can: { void: boolean; update: boolean; pay: boolean; voidPayment: boolean };
 }>();
@@ -85,6 +87,10 @@ function voidInvoice(reason: string | null): void {
                 </Button>
             </template>
         </PageHeader>
+
+        <p v-if="locked" class="mb-4 flex items-center gap-2 rounded-md border bg-muted/50 p-3 text-sm">
+            <Lock class="size-4 shrink-0" aria-hidden="true" /> {{ can.update ? $t('shop_settings.locked_owner') : $t('shop_settings.locked') }}
+        </p>
 
         <p v-if="invoice.status === 'void'" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
             {{ $t('invoices.void_notice', { reason: invoice.void_reason ?? '' }) }}

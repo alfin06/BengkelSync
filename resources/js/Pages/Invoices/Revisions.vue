@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowLeft, History } from 'lucide-vue-next';
+import { ArrowLeft, History, Lock } from 'lucide-vue-next';
 import { buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import EmptyState from '@/Components/ui/EmptyState.vue';
@@ -20,6 +20,8 @@ interface Revision {
     /** The version this edit produced ("Revisi 1", ...) */
     version: number;
     reason: string;
+    /** Changed after the invoice was locked (by someone allowed to) */
+    after_lock: boolean;
     edited_by: string | null;
     edited_at_label: string | null;
     total_before: string;
@@ -53,6 +55,7 @@ const tone = { added: 'text-green-700', removed: 'text-destructive', changed: 't
                 <CardHeader>
                     <CardTitle>{{ $t('invoices.revision', { no: String(revision.version) }) }}</CardTitle>
                     <p class="text-sm text-muted-foreground">{{ revision.edited_at_label }}<template v-if="revision.edited_by"> · {{ revision.edited_by }}</template></p>
+                    <p v-if="revision.after_lock" class="flex items-center gap-1 text-sm font-medium text-amber-700"><Lock class="size-3.5" aria-hidden="true" /> {{ $t('shop_settings.edited_after_lock') }}</p>
                 </CardHeader>
                 <CardContent class="grid gap-3 text-sm">
                     <p><span class="font-medium">{{ $t('common.reason') }}:</span> {{ revision.reason }}</p>

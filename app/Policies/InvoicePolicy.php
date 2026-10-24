@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Enums\Permission;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\Invoicing\InvoiceLock;
 
 /**
  * Tenant and branch isolation come from the Invoice global scopes; this policy checks
@@ -13,6 +14,8 @@ use App\Models\User;
  */
 class InvoicePolicy
 {
+    public function __construct(private readonly InvoiceLock $lock) {}
+
     public function viewAny(User $user): bool
     {
         return $user->can(Permission::InvoiceView->value);
@@ -50,7 +53,7 @@ class InvoicePolicy
      */
     public function update(User $user, Invoice $invoice): bool
     {
-        if ($invoice->status === InvoiceStatus::Void) {
+        if ($invoice->status === InvoiceStatus::Void || ! $this->lock->allows($user, $invoice)) {
             return false;
         }
 
@@ -82,6 +85,7 @@ class InvoicePolicy
     {
         return $user->can(Permission::InvoiceVoid->value)
             && $invoice->status !== InvoiceStatus::Void
+            && $this->lock->allows($user, $invoice)
             && $invoice->amount_paid === 0;
     }
 }

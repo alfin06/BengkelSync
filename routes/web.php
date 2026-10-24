@@ -31,6 +31,7 @@ use App\Http\Controllers\Purchasing\SupplierDebtController;
 use App\Http\Controllers\Purchasing\SupplierPaymentController;
 use App\Http\Controllers\Settings\InvoiceSettingsController;
 use App\Http\Controllers\Settings\RoleController;
+use App\Http\Controllers\Settings\ShopSettingsController;
 use App\Http\Controllers\Settings\UserController;
 use App\Http\Controllers\WorkOrders\WorkOrderController;
 use App\Http\Controllers\WorkOrders\WorkOrderMechanicController;
@@ -138,6 +139,12 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::post('/cash/transfer', [CashController::class, 'transfer'])->name('cash.transfer');
     Route::get('/cash/{cash_account}', [CashController::class, 'show'])->name('cash.show');
     Route::post('/cash/{cash_account}/count', [CashController::class, 'count'])->name('cash.count');
+
+    // Shop and branch settings, and the branch logo for printed documents
+    Route::get('/settings/shop', [ShopSettingsController::class, 'edit'])->name('settings.shop.edit');
+    Route::put('/settings/shop', [ShopSettingsController::class, 'updateShop'])->name('settings.shop.update');
+    Route::post('/settings/branch', [ShopSettingsController::class, 'updateBranch'])->name('settings.branch.update');
+    Route::get('/branch/logo', [ShopSettingsController::class, 'logo'])->name('branch.logo');
 
     // Staff accounts and roles (the permission matrix)
     Route::prefix('settings')->name('settings.')->group(function () {

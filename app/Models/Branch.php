@@ -84,6 +84,15 @@ class Branch extends Model
     }
 
     /**
+     * The logo for printed documents (served from the private disk to logged-in staff);
+     * the version in the URL changes with the file, so browsers fetch a new logo at once.
+     */
+    public function logoUrl(): ?string
+    {
+        return $this->logo_path === null ? null : route('branch.logo', ['v' => substr(md5($this->logo_path), 0, 8)]);
+    }
+
+    /**
      * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany

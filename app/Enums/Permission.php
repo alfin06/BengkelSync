@@ -46,6 +46,8 @@ enum Permission: string
     case InvoiceVoid = 'invoice.void';
     case InvoiceDiscount = 'invoice.discount';
     case InvoiceToggleTax = 'invoice.toggle_tax';
+    // Fix invoices older than the lock period (SPEC section 6); Owner only by default.
+    case InvoiceUpdateLocked = 'invoice.update_locked';
 
     case PaymentView = 'payment.view';
     case PaymentCreate = 'payment.create';

@@ -118,5 +118,8 @@ return [
         'receipt' => 'receipt photo',
         'is_restricted' => 'restricted',
         'name' => 'name',
+        'invoice_lock_days' => 'lock period',
+        'logo' => 'logo',
+        'remove_logo' => 'remove logo',
     ],
 ];

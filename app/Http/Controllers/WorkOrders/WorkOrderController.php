@@ -147,6 +147,7 @@ class WorkOrderController extends Controller
         return Inertia::render('WorkOrders/Print', [
             'workOrder' => WorkOrderResource::make($workOrder)->resolve($request),
             'branchName' => $workOrder->branch->name,
+            'logoUrl' => $workOrder->branch->logoUrl(),
         ]);
     }
 

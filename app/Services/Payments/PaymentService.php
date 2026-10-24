@@ -13,6 +13,7 @@ use App\Models\PaymentMethod;
 use App\Models\PaymentReceipt;
 use App\Services\Audit\AuditLogger;
 use App\Services\Cash\CashService;
+use App\Services\Invoicing\InvoiceLock;
 use App\Services\Invoicing\InvoiceSettlement;
 use App\Support\DocumentNumber;
 use App\Support\Money;
@@ -33,6 +34,7 @@ class PaymentService
         private readonly TenantContext $context,
         private readonly CashService $cash,
         private readonly InvoiceSettlement $settlement,
+        private readonly InvoiceLock $lock,
         private readonly AuditLogger $audit,
         private readonly AuthFactory $auth,
     ) {}
@@ -149,7 +151,7 @@ class PaymentService
 
         $this->cash->record($payment->account, CashMovementType::CustomerPayment, -$payment->received(), $payment, __('payments.void_cash_note', ['invoice' => $invoice->number, 'reason' => $reason]));
         $this->settlement->apply($invoice, $invoice->amount_paid - $payment->amount);
-        $this->audit->record('payment_voided', $payment, ['amount' => $payment->amount, 'surcharge_amount' => $payment->surcharge_amount], [], $reason);
+        $this->audit->record('payment_voided', $payment, ['amount' => $payment->amount, 'surcharge_amount' => $payment->surcharge_amount], $this->lock->isLocked($invoice) ? ['after_lock' => true] : [], $reason);
     }
 
     /**

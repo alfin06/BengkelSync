@@ -10,7 +10,7 @@ import type { WorkOrder } from '@/types/workOrders';
  * The job sheet ("SPK") for the mechanic's bay. No prices: the mechanic only needs to
  * know what to check, do and fit. Printed with the browser (A4 or A5).
  */
-defineProps<{ workOrder: WorkOrder; branchName: string }>();
+defineProps<{ workOrder: WorkOrder; branchName: string; logoUrl: string | null }>();
 
 const page = usePage();
 
@@ -30,9 +30,12 @@ onMounted(print);
 
         <article class="mx-auto max-w-3xl bg-white p-8 text-sm text-black shadow print:max-w-none print:p-0 print:shadow-none">
             <header class="flex items-start justify-between gap-4 border-b-2 border-black pb-3">
-                <div>
-                    <p class="text-lg font-bold">{{ page.props.tenant?.name }}</p>
-                    <p>{{ branchName }}</p>
+                <div class="flex items-start gap-3">
+                    <img v-if="logoUrl" :src="logoUrl" alt="" class="max-h-14 max-w-24 object-contain" />
+                    <div>
+                        <p class="text-lg font-bold">{{ page.props.tenant?.name }}</p>
+                        <p>{{ branchName }}</p>
+                    </div>
                 </div>
                 <div class="text-right">
                     <p class="text-lg font-bold">{{ $t('work_orders.print_title') }}</p>

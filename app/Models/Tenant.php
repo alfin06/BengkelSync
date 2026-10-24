@@ -66,6 +66,17 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    /**
+     * Invoices older than this many days can no longer be changed (SPEC section 6, lock
+     * period); null = no lock.
+     */
+    public function invoiceLockDays(): ?int
+    {
+        $days = $this->settings['invoice_lock_days'] ?? null;
+
+        return is_int($days) && $days > 0 ? $days : null;
+    }
+
     public function isActive(): bool
     {
         return $this->status === TenantStatus::Active;

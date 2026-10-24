@@ -77,6 +77,7 @@ class InvoiceRevisionController extends Controller
                 // The edit that produced version revision_no + 1.
                 'version' => $revision->revision_no + 1,
                 'reason' => $revision->reason,
+                'after_lock' => (bool) ($revision->snapshot['edited_after_lock'] ?? false),
                 'edited_by' => $revision->editor?->name,
                 'edited_at_label' => BranchTime::label($revision->created_at),
                 'total_before' => Money::format((int) $revision->snapshot['total']),

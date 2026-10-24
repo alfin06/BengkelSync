@@ -42,6 +42,7 @@ class InvoiceService
         private readonly TenantContext $context,
         private readonly StockService $stock,
         private readonly InvoiceSettlement $settlement,
+        private readonly InvoiceLock $lock,
         private readonly AuditLogger $audit,
         private readonly AuthFactory $auth,
     ) {}
@@ -152,10 +153,12 @@ class InvoiceService
             }
 
             $before = $this->snapshot($locked);
+            // Only users with invoice.update_locked get here for an old invoice; mark it.
+            $afterLock = $this->lock->isLocked($locked);
             InvoiceRevision::query()->create([
                 'invoice_id' => $locked->id,
                 'revision_no' => $locked->revision_no,
-                'snapshot' => $before,
+                'snapshot' => [...$before, 'edited_after_lock' => $afterLock],
                 'reason' => trim($reason),
                 'edited_by' => $this->userId(),
             ]);
@@ -185,7 +188,7 @@ class InvoiceService
             $locked->forceFill([...$totals, 'tax_enabled' => $taxEnabled, 'revision_no' => $locked->revision_no + 1])->save();
             $this->settlement->apply($locked, $locked->amount_paid);
 
-            $this->audit->record('invoice_revised', $locked, ['total' => $before['total']], ['total' => $locked->total], trim($reason));
+            $this->audit->record('invoice_revised', $locked, ['total' => $before['total']], ['total' => $locked->total, ...($afterLock ? ['after_lock' => true] : [])], trim($reason));
 
             return $locked;
         });
@@ -232,7 +235,7 @@ class InvoiceService
                 'voided_by' => $this->userId(),
             ])->save();
 
-            $this->audit->record('invoice_voided', $locked, reason: trim($reason));
+            $this->audit->record('invoice_voided', $locked, [], $this->lock->isLocked($locked) ? ['after_lock' => true] : [], trim($reason));
         });
 
         $invoice->refresh();

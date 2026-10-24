@@ -49,6 +49,7 @@ enum RoleName: string
             Permission::BillingManage,
             Permission::ExpenseViewRestricted,
             Permission::DashboardViewProfit,
+            Permission::InvoiceUpdateLocked,
             Permission::RoleView,
             Permission::RoleCreate,
             Permission::RoleUpdate,

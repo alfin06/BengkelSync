@@ -24,7 +24,7 @@ Resources: `customer, vehicle, service, mechanic, work_order, invoice, payment, 
 Actions: `view, create, update, delete`, plus:
 - `mechanic.view_identity` (see NIK and the KTP photo)
 - `work_order.assign`, `work_order.change_status`, `work_order.update_closed`
-- `invoice.update` (edit an unpaid invoice), `invoice.update_paid` (edit an invoice with payments), `invoice.void`, `invoice.discount`, `invoice.toggle_tax`
+- `invoice.update` (edit an unpaid invoice), `invoice.update_paid` (edit an invoice with payments), `invoice.void`, `invoice.discount`, `invoice.toggle_tax`, `invoice.update_locked` (edit, cancel or correct payments of invoices older than the lock period; Owner only by default)
 - `payment.update`, `payment.delete`
 - `stock.adjust`, `stock.transfer` (between branches)
 - `supplier_payment.on_receipt` (pay a purchase in full when it arrives, from the cash drawer or petty cash, up to the branch's cash purchase limit; for staff without `supplier_payment.create`)
@@ -153,7 +153,7 @@ Users with the right permission can edit any record, but every edit is traceable
   - The change history lists every edit with who, when, the reason, lines added/removed/changed and the totals before and after.
 - **Payments**: editing or deleting needs `payment.update` / `payment.delete`, a reason, and recalculates invoice status. The matching cash movement is reversed with a new movement, never deleted.
 - **Supplier payments and cash movements** follow the same rule: corrections are new rows with a reason, so balances can always be traced.
-- **Settings**: tenants can choose to allow or block editing invoices older than N days (lock period), so closed months stay stable for bookkeeping.
+- **Settings**: tenants can choose to allow or block editing invoices older than N days (lock period), so closed months stay stable for bookkeeping. Stored in `tenants.settings.invoice_lock_days` (empty = no lock). Locked invoices cannot be edited or cancelled and their payments cannot be cancelled (new payments still work), except by users with `invoice.update_locked`; such changes are marked "after lock" in the revision history and the audit log.
 
 ## 7. Screens
 - **Auth**: sign up (create shop), login, forgot password, email verification, accept invitation.
@@ -248,7 +248,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Petty cash: transfers between cash accounts, cash count / adjustment, balances on the dashboard
 - [x] Dashboard (single branch view)
 - [x] User management (owner creates users with a password) + role/permission matrix UI
-- [ ] Shop & branch settings (profile, logo, tax, invoice footer)
+- [x] Shop & branch settings (profile, logo, tax, invoice footer)
 
 ### MVP — Pilot launch
 - [ ] Production server, HTTPS, daily backups with a tested restore, error tracking
@@ -288,6 +288,7 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - The pilot shop is not using the app yet. There is no production data to migrate.
 - Mechanics are records without a login (no device at their workstation). Staff assign them to work orders. NIK and KTP photo are kept (needed by the shop) and protected.
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
+- Settings: the owner can still fix locked invoices (marked in the history); logo per branch (2026-10-24).
 - Dashboard: sales and money received side by side; card fees not counted; gross profit only for the Owner (2026-10-24).
 - Expenses: Front Desk records small cash expenses up to the branch limit; "Gaji & bonus" is restricted to the Owner; categories are managed by Owner and Finance; no rent category (the shop owns its place) (2026-10-24).
 - Invoice editing: Front Desk may correct unpaid invoices; invoices with payments need Finance (`invoice.update_paid`) (2026-10-24).

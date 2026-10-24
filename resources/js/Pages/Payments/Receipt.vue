@@ -30,7 +30,7 @@ interface ReceiptPrint {
  */
 defineProps<{
     receipt: ReceiptPrint;
-    branch: { name: string; address: string | null; phone: string | null };
+    branch: { name: string; address: string | null; phone: string | null; logo_url: string | null };
 }>();
 
 const page = usePage();
@@ -50,11 +50,14 @@ onMounted(print);
 
         <article class="mx-auto max-w-[148mm] bg-white p-6 text-[11px] leading-snug text-black shadow print:max-w-none print:p-0 print:shadow-none">
             <header class="flex items-start justify-between gap-4 border-b-2 border-black pb-2">
-                <div>
-                    <p class="text-sm font-bold">{{ page.props.tenant?.name }}</p>
-                    <p>{{ branch.name }}</p>
-                    <p v-if="branch.address" class="whitespace-pre-line">{{ branch.address }}</p>
-                    <p v-if="branch.phone">{{ $t('invoices.print_phone', { phone: branch.phone }) }}</p>
+                <div class="flex items-start gap-3">
+                    <img v-if="branch.logo_url" :src="branch.logo_url" alt="" class="max-h-14 max-w-24 object-contain" />
+                    <div>
+                        <p class="text-sm font-bold">{{ page.props.tenant?.name }}</p>
+                        <p>{{ branch.name }}</p>
+                        <p v-if="branch.address" class="whitespace-pre-line">{{ branch.address }}</p>
+                        <p v-if="branch.phone">{{ $t('invoices.print_phone', { phone: branch.phone }) }}</p>
+                    </div>
                 </div>
                 <div class="text-right">
                     <p class="text-sm font-bold">{{ $t('payments.receipt_title') }}</p>

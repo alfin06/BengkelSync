@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderPart;
 use App\Models\WorkOrderServiceLine;
+use App\Services\Invoicing\InvoiceLock;
 use App\Services\Invoicing\InvoiceService;
 use App\Support\BranchTime;
 use App\Support\Money;
@@ -103,7 +104,7 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.show', $invoice)->with('success', __('invoices.created', ['number' => $invoice->number]));
     }
 
-    public function show(Request $request, Invoice $invoice, TenantContext $context): Response
+    public function show(Request $request, Invoice $invoice, TenantContext $context, InvoiceLock $lock): Response
     {
         Gate::authorize('view', $invoice);
 
@@ -146,12 +147,13 @@ class InvoiceController extends Controller
                 ])->all()
                 : [],
             'today' => $today,
+            'locked' => $lock->isLocked($invoice),
             'suggestedDueDate' => $invoice->due_date?->toDateString() ?? Carbon::parse($today)->addDays(7)->toDateString(),
             'can' => [
                 'void' => $user->can('void', $invoice),
                 'update' => $user->can('update', $invoice),
                 'pay' => $canPay,
-                'voidPayment' => $user->can(Permission::PaymentDelete->value),
+                'voidPayment' => $user->can(Permission::PaymentDelete->value) && $lock->allows($user, $invoice),
             ],
         ]);
     }
@@ -173,6 +175,7 @@ class InvoiceController extends Controller
                 'phone' => $invoice->branch->phone,
                 'npwp' => $invoice->branch->npwp,
                 'footer' => $invoice->branch->invoice_footer,
+                'logo_url' => $invoice->branch->logoUrl(),
             ],
         ]);
     }

@@ -277,5 +277,8 @@ return [
         'category_id' => 'kategori',
         'receipt' => 'foto nota',
         'is_restricted' => 'rahasia',
+        'invoice_lock_days' => 'periode kunci',
+        'logo' => 'logo',
+        'remove_logo' => 'hapus logo',
     ],
 ];
