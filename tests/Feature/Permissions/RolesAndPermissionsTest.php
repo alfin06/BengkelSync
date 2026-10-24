@@ -47,8 +47,8 @@ it('grants the default permissions per role', function (RoleName $role, array $a
     ],
     'finance' => [
         RoleName::Finance,
-        [PermissionName::CustomerCreate, PermissionName::InvoiceVoid, PermissionName::SupplierPaymentCreate, PermissionName::CashAdjust, PermissionName::MechanicViewIdentity, PermissionName::DashboardViewFinancials],
-        [PermissionName::UserCreate, PermissionName::RoleUpdate, PermissionName::SettingsUpdate, PermissionName::BillingManage],
+        [PermissionName::CustomerCreate, PermissionName::InvoiceVoid, PermissionName::SupplierPaymentCreate, PermissionName::CashAdjust, PermissionName::MechanicViewIdentity, PermissionName::MechanicCreate, PermissionName::MechanicUpdate, PermissionName::DashboardViewFinancials],
+        [PermissionName::UserCreate, PermissionName::RoleUpdate, PermissionName::SettingsUpdate, PermissionName::BillingManage, PermissionName::MechanicDelete],
     ],
     'warehouse' => [
         RoleName::Warehouse,

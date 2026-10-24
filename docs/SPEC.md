@@ -36,7 +36,7 @@ Default roles per tenant (the owner can edit them or add more in the permission 
 | Owner (Pemilik) | everything; system role, cannot be deleted; at least one active owner must exist |
 | Branch Manager (Kepala Cabang) | everything within assigned branches except billing, roles, tenant settings |
 | Front Desk (Admin Depan) | customers and vehicles (no delete), mechanics (view), service catalog (view), work orders incl. assign and change status, create invoices, record customer payments, parts (view/create), stock (view), purchases (view/create: receiving supplier deliveries), suppliers (view/create), cash (view) |
-| Finance (Keuangan) | everything Front Desk has, plus invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, service and part prices (service create/update), stock adjust, mechanic identity, financial dashboard, reports |
+| Finance (Keuangan) | everything Front Desk has, plus mechanics (create/update incl. identity), invoice edit/void/discount/tax, payment edit/delete, expenses, purchase edit, supplier payments, cash transfer/adjust, service and part prices (service create/update), stock adjust, financial dashboard, reports |
 | Warehouse (Gudang) | parts, stock, suppliers, purchases, transfers |
 
 Mechanics do not log in (section 11). There is no Mechanic role; mechanics are records that staff assign to work orders.

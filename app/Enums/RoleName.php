@@ -101,6 +101,8 @@ enum RoleName: string
         return [
             ...self::frontDesk(),
             Permission::MechanicViewIdentity,
+            Permission::MechanicCreate,
+            Permission::MechanicUpdate,
             Permission::ServiceCreate,
             Permission::ServiceUpdate,
             Permission::InvoiceUpdate,
