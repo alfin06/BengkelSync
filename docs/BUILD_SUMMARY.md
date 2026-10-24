@@ -7,7 +7,7 @@ Status on 2026-10-24. Written for the review before pushing to `main`, and as th
 | | |
 |---|---|
 | Scope done | SPEC §9 **Phase 0** (foundation), **Phase 1** (core operations) and **Phase 2** (management): every checklist item ticked |
-| Not done yet | SPEC §9 **Pilot launch**: production server and backups, CSV import of the shop's data, Indonesian user guide |
+| Not done yet | SPEC §9 **Pilot launch**: production server and backups, CSV import of the shop's data, Indonesian user guide (first draft: [PANDUAN.md](PANDUAN.md)) |
 | Pilot shop | Bengkel Kalimas Lumas (not live; no production data) |
 | Tests | 425 Pest tests, 2.098 assertions, all passing (`php artisan test --parallel`) |
 | Checks | PHPStan level 6 clean, Pint clean, `vue-tsc` clean, `npm run build` passes |
@@ -176,7 +176,7 @@ These shaped the design. They are also recorded in SPEC §11.
 
 ## 7. Known limitations and deferred items
 
-- **Not built yet (pilot launch):** production setup and backups, CSV import, user guide.
+- **Not built yet (pilot launch):** production setup and backups, CSV import. The user guide has a first draft in `docs/PANDUAN.md`.
 - **Deferred by the SPEC (after pilot):** public sign-up and invitations, subscription billing, kanban board, WhatsApp sharing and reminders, multi-branch dashboard, reports beyond the dashboard, stock transfers between branches (permission exists, no screen).
 - **Server-side PDFs:** printing uses the browser's print dialog ("Save as PDF" works). A real PDF and WhatsApp sharing belong to the deferred WhatsApp item.
 - **Printing was not tested on paper** (no A5 paper available yet). Check the layout on the shop's printer before go-live.

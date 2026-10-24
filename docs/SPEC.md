@@ -253,7 +253,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 ### MVP — Pilot launch
 - [ ] Production server, HTTPS, daily backups with a tested restore, error tracking
 - [ ] Import the shop's existing customers, vehicles, and parts (CSV)
-- [ ] Short user guide in Indonesian for the shop staff
+- [x] Short user guide in Indonesian for the shop staff (`docs/PANDUAN.md`)
 
 ### After pilot (deferred)
 - [ ] Public sign-up, email verification, user invitations
