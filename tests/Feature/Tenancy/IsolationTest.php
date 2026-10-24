@@ -1,15 +1,19 @@
 <?php
 
+use App\Enums\CashMovementType;
 use App\Enums\DocumentType;
 use App\Enums\RoleName;
 use App\Enums\StockMovementType;
 use App\Models\AuditLog;
 use App\Models\Branch;
+use App\Models\CashAccount;
+use App\Models\CashMovement;
 use App\Models\Customer;
 use App\Models\DocumentSequence;
 use App\Models\Mechanic;
 use App\Models\Part;
 use App\Models\PartBranchStock;
+use App\Models\PaymentMethod;
 use App\Models\ServiceItem;
 use App\Models\StockMovement;
 use App\Models\Supplier;
@@ -17,6 +21,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleOwnership;
 use App\Services\Audit\AuditLogger;
+use App\Services\Cash\CashService;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
 use App\Services\Tenancy\ProvisionedTenant;
@@ -81,6 +86,19 @@ it('isolates branch stock', function () {
 it('isolates stock movements', function () {
     assertTenantIsolated(StockMovement::class, fn (ProvisionedTenant $shop) => app(StockService::class)
         ->move(Part::factory()->create(), StockMovementType::Purchase, 100));
+});
+
+it('isolates cash accounts', function () {
+    assertTenantIsolated(CashAccount::class, fn (ProvisionedTenant $shop) => CashAccount::factory()->create());
+});
+
+it('isolates cash movements', function () {
+    assertTenantIsolated(CashMovement::class, fn (ProvisionedTenant $shop) => app(CashService::class)
+        ->record(CashAccount::factory()->create(), CashMovementType::CustomerPayment, 1_000));
+});
+
+it('isolates payment methods', function () {
+    assertTenantIsolated(PaymentMethod::class, fn (ProvisionedTenant $shop) => PaymentMethod::factory()->create());
 });
 
 it('isolates document sequences', function () {

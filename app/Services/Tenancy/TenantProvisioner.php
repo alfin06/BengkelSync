@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Enums\TenantStatus;
 use App\Models\Branch;
 use App\Models\Tenant;
+use App\Services\Cash\CashSetupService;
 use App\Services\Permissions\PermissionSynchronizer;
 use App\Services\Permissions\RoleProvisioner;
 use App\Services\Users\UserService;
@@ -14,11 +15,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Creates a ready-to-use tenant: tenant, first branch, default roles and the owner
- * (SPEC section 3). Everything happens in one transaction.
+ * Creates a ready-to-use tenant: tenant, first branch (with its default cash accounts and
+ * payment method), default roles and the owner (SPEC section 3), in one transaction.
  *
- * Phase 1 modules add their own defaults here (payment methods, cash accounts,
- * expense categories, ...).
+ * Phase 1 modules add their own defaults here (expense categories, ...).
  */
 class TenantProvisioner
 {
@@ -27,6 +27,7 @@ class TenantProvisioner
         private readonly PermissionSynchronizer $permissions,
         private readonly RoleProvisioner $roles,
         private readonly UserService $users,
+        private readonly CashSetupService $cash,
     ) {}
 
     public function provision(TenantProvisioningData $data): ProvisionedTenant
@@ -49,6 +50,7 @@ class TenantProvisioner
                 ]);
 
                 $this->roles->provision($tenant);
+                $this->cash->provisionDefaults($branch);
 
                 $owner = $this->users->create(
                     attributes: [

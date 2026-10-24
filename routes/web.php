@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ActiveBranchController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Cash\CashController;
+use App\Http\Controllers\Cash\PaymentSettingsController;
 use App\Http\Controllers\Catalog\ServiceItemController;
 use App\Http\Controllers\Customers\CustomerController;
 use App\Http\Controllers\Customers\CustomerLookupController;
@@ -58,6 +60,23 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::post('/parts/{part}/stock/adjust', [PartStockController::class, 'adjust'])->name('parts.stock.adjust');
     Route::put('/parts/{part}/stock', [PartStockController::class, 'configure'])->name('parts.stock.configure');
     Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Cash ("Kas") of the active branch
+    Route::get('/cash', [CashController::class, 'index'])->name('cash.index');
+    Route::post('/cash/transfer', [CashController::class, 'transfer'])->name('cash.transfer');
+    Route::get('/cash/{cash_account}', [CashController::class, 'show'])->name('cash.show');
+    Route::post('/cash/{cash_account}/count', [CashController::class, 'count'])->name('cash.count');
+
+    // Branch settings: cash accounts and payment methods
+    Route::prefix('settings/payments')->name('settings.payments.')->controller(PaymentSettingsController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/accounts', 'storeAccount')->name('accounts.store');
+        Route::put('/accounts/{cash_account}', 'updateAccount')->name('accounts.update');
+        Route::delete('/accounts/{cash_account}', 'destroyAccount')->name('accounts.destroy');
+        Route::post('/methods', 'storeMethod')->name('methods.store');
+        Route::put('/methods/{payment_method}', 'updateMethod')->name('methods.update');
+        Route::delete('/methods/{payment_method}', 'destroyMethod')->name('methods.destroy');
+    });
 
     // The user's own notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

@@ -4,12 +4,15 @@ namespace Database\Seeders;
 
 use App\Enums\RoleName;
 use App\Models\Branch;
+use App\Models\CashAccount;
 use App\Models\Customer;
 use App\Models\Mechanic;
 use App\Models\Part;
 use App\Models\ServiceItem;
 use App\Models\Supplier;
 use App\Models\Vehicle;
+use App\Services\Cash\CashService;
+use App\Services\Cash\CashSetupService;
 use App\Services\Customers\VehicleService;
 use App\Services\Inventory\StockService;
 use App\Services\Tenancy\TenantProvisioner;
@@ -45,6 +48,7 @@ class DemoSeeder extends Seeder
 
         $context->run($demo->tenant, null, function () use ($demo, $users): void {
             $second = Branch::query()->create(['name' => 'Cabang Timur', 'code' => 'DMT']);
+            app(CashSetupService::class)->provisionDefaults($second);
             $main = $demo->branch->id;
 
             $accounts = [
@@ -69,10 +73,53 @@ class DemoSeeder extends Seeder
             Mechanic::factory()->count(3)->create();
             Mechanic::factory()->inactive()->create();
             $this->inventory();
+            $this->cash();
         });
 
         $east = $context->run($demo->tenant, null, fn () => Branch::query()->where('code', 'DMT')->firstOrFail());
         $context->run($demo->tenant, $east, fn () => Mechanic::factory()->count(2)->create());
+    }
+
+    /**
+     * Accounts and payment methods like the pilot shop's, with opening balances.
+     * (The default "Laci Kasir", "Kas Kecil" and "Tunai" exist already.)
+     */
+    private function cash(): void
+    {
+        $setup = app(CashSetupService::class);
+        $cash = app(CashService::class);
+
+        $anton = $setup->createAccount(['name' => 'BCA Anton', 'type' => 'bank', 'sort' => 3]);
+        $martino = $setup->createAccount(['name' => 'BCA Martino', 'type' => 'bank', 'sort' => 4]);
+        $mega = $setup->createAccount(['name' => 'Bank Mega', 'type' => 'bank', 'sort' => 5]);
+
+        $methods = [
+            // [name, type, account, surcharge %, needs reference]
+            ['QRIS BCA', 'qris', $anton, '0', false],
+            ['QRIS Mega', 'qris', $mega, '0', false],
+            ['Transfer BCA Anton', 'transfer', $anton, '0', false],
+            ['Transfer BCA Martino', 'transfer', $martino, '0', false],
+            ['Debit BCA', 'debit', $anton, '0', true],
+            ['Debit non-BCA', 'debit', $anton, '3', true],
+            ['Kartu Kredit', 'credit_card', $anton, '3', true],
+        ];
+
+        foreach ($methods as $sort => [$name, $type, $account, $surcharge, $reference]) {
+            $setup->createMethod([
+                'name' => $name,
+                'type' => $type,
+                'cash_account_id' => $account->id,
+                'surcharge_percent' => $surcharge,
+                'needs_reference' => $reference,
+                'sort' => $sort + 2,
+            ]);
+        }
+
+        [$drawer, $petty] = CashAccount::query()->orderBy('sort')->limit(2)->get()->all();
+        $cash->countTo($drawer, 1_500_000, __('stock.opening_balance'));
+        $cash->countTo($petty, 300_000, __('stock.opening_balance'));
+        $cash->countTo($anton, 25_000_000, __('stock.opening_balance'));
+        $cash->transfer($drawer, $petty, 200_000, 'Isi kas kecil');
     }
 
     /**

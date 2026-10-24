@@ -209,5 +209,13 @@ return [
         'location' => 'lokasi rak',
         'counted' => 'jumlah di rak',
         'sales_name' => 'nama sales',
+        'from_account_id' => 'akun asal',
+        'to_account_id' => 'akun tujuan',
+        'amount' => 'jumlah',
+        'note' => 'catatan',
+        'counted_amount' => 'jumlah hasil hitung',
+        'cash_account_id' => 'akun kas',
+        'surcharge_percent' => 'biaya tambahan',
+        'sort' => 'urutan',
     ],
 ];

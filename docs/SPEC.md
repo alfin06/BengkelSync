@@ -85,8 +85,8 @@ Status flow: `draft → queued → in_progress → waiting_parts → completed �
 **payment_methods** [branch]: id, name (e.g. "Tunai", "QRIS BCA", "Debit BCA", "Debit non-BCA", "Kartu Kredit", "Transfer BCA Anton"), type (cash|transfer|qris|debit|credit_card|other), cash_account_id (where the money lands), surcharge_percent (default 0), needs_reference (bool), is_active, sort. Managed in settings; replaces hardcoded payment lists.
 
 **Cash and petty cash.**
-**cash_accounts** [branch]: id, name (e.g. "Laci Kasir", "Kas Kecil", "BCA Anton"), type (cash_drawer|petty_cash|bank|other), is_active, sort.
-**cash_movements** [branch]: cash_account_id, amount (signed), type (customer_payment|supplier_payment|expense|transfer_in|transfer_out|adjustment), reference_type, reference_id, note, created_by, created_at. The balance of an account is the sum of its movements; it is never stored as an editable number.
+**cash_accounts** [branch]: id, name (e.g. "Laci Kasir", "Kas Kecil", "BCA Anton"), type (cash_drawer|petty_cash|bank|other), is_active, sort. Physical cash (drawer, petty cash) can never go below zero; bank and other accounts may. Bank and other balances are only visible with dashboard.view_financials. Accounts and payment methods are managed with branch.update. Every new branch gets "Laci Kasir", "Kas Kecil" and the method "Tunai".
+**cash_movements** [branch]: cash_account_id, amount (signed), balance_after, transfer_group, type (customer_payment|supplier_payment|expense|transfer_in|transfer_out|adjustment), reference_type, reference_id, note, created_by, created_at. The balance of an account is the sum of its movements; it is never stored as an editable number.
 - A top-up of petty cash is a transfer: one `transfer_out` and one `transfer_in` row, written together with `cash.transfer`.
 - A cash count that differs from the system balance is recorded as an `adjustment` with a required reason (`cash.adjust`).
 - All writes go through `CashService` in a transaction (same rule as `StockService`).
@@ -210,7 +210,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Mechanics (records without login; NIK encrypted, KTP on a private disk)
 - [x] Parts, branch stock, suppliers, StockService (stock in, adjust), low-stock notifications
 - [ ] Purchases with supplier debt and supplier payments
-- [ ] Cash accounts, payment methods, CashService
+- [x] Cash accounts, payment methods, CashService
 - [ ] Work orders with status flow, task checklist, and mechanic assignment
 - [ ] Invoices (from work order and walk-in), optional tax, print/PDF
 - [ ] Customer payments with several methods per checkout, card surcharge, kwitansi

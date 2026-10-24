@@ -49,5 +49,13 @@ return [
         'location' => 'shelf location',
         'counted' => 'quantity on the shelf',
         'sales_name' => 'sales contact',
+        'from_account_id' => 'source account',
+        'to_account_id' => 'target account',
+        'amount' => 'amount',
+        'note' => 'note',
+        'counted_amount' => 'counted amount',
+        'cash_account_id' => 'cash account',
+        'surcharge_percent' => 'surcharge',
+        'sort' => 'order',
     ],
 ];

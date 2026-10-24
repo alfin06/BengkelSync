@@ -41,12 +41,14 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // A broken business rule is a normal user-facing outcome: show it as a flash error.
+        // It is also put in the error bag, so Inertia calls onError (not onSuccess) and an
+        // open dialog stays open with what the user typed.
         $exceptions->render(function (BusinessRuleViolation $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
             }
 
-            return back()->with('error', $e->getMessage());
+            return back()->withErrors(['business' => $e->getMessage()])->with('error', $e->getMessage());
         });
 
         // Friendly Inertia error pages instead of the default HTML pages.
