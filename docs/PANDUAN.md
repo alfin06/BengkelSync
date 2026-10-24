@@ -200,6 +200,7 @@ Menu **Pengguna & akses**:
 - **Setiap perubahan tercatat**: siapa, kapan, dan apa yang diubah.
 - **Stok dan kas hanya berubah lewat transaksi** (SPK, invoice, pembelian, pembayaran, pengeluaran, koreksi stok, hitung kas). Kalau angkanya tidak cocok, pakai **Koreksi stok** atau **Hitung kas** dengan alasan yang jelas.
 - **Mencetak**: tombol cetak membuka jendela cetak browser. Pilih ukuran kertas **A5**. Untuk menyimpan sebagai PDF, pilih printer **Save as PDF / Simpan sebagai PDF**.
+- **Pilihan (dropdown) bisa diketik**: ketuk kolomnya lalu ketik sebagian nama (mis. nama supplier atau akun kas) untuk menyaring daftar, lalu pilih atau tekan Enter. Di HP, daftar pendek (6 pilihan atau kurang) langsung terbuka tanpa keyboard.
 - Jika muncul pesan merah, baca isinya: biasanya menjelaskan aturan yang mencegah perubahan (mis. stok tidak cukup, atau invoice sudah dikunci).
 
 ---
