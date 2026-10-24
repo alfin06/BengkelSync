@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#ffffff">
 
-        <title inertia>{{ config('app.name', 'OpenBengkel') }}</title>
+        <title inertia>{{ config('app.name', 'BengkelSync') }}</title>
 
         <link rel="icon" href="{{ asset('favicon.ico') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">

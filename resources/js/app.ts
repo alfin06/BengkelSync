@@ -8,7 +8,7 @@ import { createApp, h, type DefineComponent } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import type { SharedProps } from '@/types';
 
-const appName = import.meta.env.VITE_APP_NAME || 'OpenBengkel';
+const appName = import.meta.env.VITE_APP_NAME || 'BengkelSync';
 // Bundled eagerly (a few KB) so the first paint is already translated, without a flash of keys.
 const translations = import.meta.glob<{ default: Record<string, string> }>('../../lang/*.json', { eager: true });
 

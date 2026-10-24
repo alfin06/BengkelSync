@@ -1,4 +1,4 @@
-# CLAUDE.md — Bengkel Management System (SaaS)
+# CLAUDE.md — BengkelSync, a bengkel management system (SaaS)
 
 Multi-tenant SaaS for Indonesian automotive repair shops (bengkel). One account (tenant) can run multiple branches.
 Full requirements: @docs/SPEC.md. Read the relevant section before starting any feature.
@@ -16,7 +16,7 @@ Full requirements: @docs/SPEC.md. Read the relevant section before starting any 
 
 ## Commands
 - `composer dev` / `php artisan serve` + `npm run dev`
-- `php artisan test` must pass before a task is done. Tests run on the MySQL database `openbengkel_test` (not SQLite), wrapped in a rolled-back transaction per test
+- `php artisan test` must pass before a task is done. Tests run on the MySQL database `bengkelsync_test` (not SQLite), wrapped in a rolled-back transaction per test
 - `php artisan tenant:create` creates a shop (tenant + first branch + default roles + owner)
 - `./vendor/bin/phpstan analyse` and `./vendor/bin/pint --test` must pass
 - `npm run build` and `npm run type-check` must pass for frontend changes

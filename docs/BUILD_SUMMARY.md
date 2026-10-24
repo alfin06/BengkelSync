@@ -1,4 +1,4 @@
-# OpenBengkel: build summary (Phase 0 – Phase 2)
+# BengkelSync: build summary (Phase 0 – Phase 2)
 
 Status on 2026-10-24. Written for the review before pushing to `main`, and as the starting point for later work sessions. The full requirements are in [SPEC.md](SPEC.md); the working rules for code are in [CLAUDE.md](../CLAUDE.md).
 

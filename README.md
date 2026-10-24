@@ -1,4 +1,4 @@
-# OpenBengkel
+# BengkelSync
 
 Management system for Indonesian automotive repair shops (bengkel): customers, vehicles, work orders, invoices, payments, inventory, supplier debts, petty cash and expenses. Built as a multi-tenant SaaS (one account can run several branches) and piloted in a single shop first.
 
@@ -29,7 +29,7 @@ Requirements: PHP 8.3+, Composer, Node 22+, MySQL 8.
    ```bash
    php artisan key:generate
    ```
-3. Create two databases: `openbengkel` (app) and `openbengkel_test` (tests).
+3. Create two databases: `bengkelsync` (app) and `bengkelsync_test` (tests).
 4. Create the tables, permissions and the demo shop:
    ```bash
    php artisan migrate --seed
@@ -40,7 +40,7 @@ Requirements: PHP 8.3+, Composer, Node 22+, MySQL 8.
    ```
 6. Scheduled jobs (daily supplier-debt reminders) need Laravel's scheduler. On a server, add this cron entry; locally, run `php artisan schedule:work` when you need it:
    ```
-   * * * * * cd /path/to/openbengkel && php artisan schedule:run >> /dev/null 2>&1
+   * * * * * cd /path/to/bengkelsync && php artisan schedule:run >> /dev/null 2>&1
    ```
 
 ### Demo accounts (local only)
@@ -85,7 +85,7 @@ npm run type-check
 npm run build
 ```
 
-Tests run against the MySQL database `openbengkel_test` (see `phpunit.xml`), so row locking behaves like production.
+Tests run against the MySQL database `bengkelsync_test` (see `phpunit.xml`), so row locking behaves like production.
 
 ## Documentation
 

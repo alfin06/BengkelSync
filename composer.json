@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "openbengkel/openbengkel",
+    "name": "bengkelsync/bengkelsync",
     "type": "project",
     "description": "Management system for Indonesian automotive repair shops (bengkel).",
     "keywords": ["bengkel", "workshop", "laravel"],

@@ -1,4 +1,4 @@
-# Codebase Audit — OpenBengkel vs. SPEC
+# Codebase Audit — BengkelSync vs. SPEC
 
 Date: 2026-10-21 · Scope: SPEC section 10 checklist · Branch `main` @ `b4ffcbc` plus uncommitted changes in the working tree.
 No code was changed for this audit.

@@ -1,4 +1,4 @@
-# Panduan Pengguna OpenBengkel
+# Panduan Pengguna BengkelSync
 
 Panduan singkat untuk staf bengkel: Admin Depan, Keuangan, dan Pemilik. Aplikasi bisa dipakai di HP, tablet, maupun komputer. Di HP, menu utama ada di bawah layar; menu lain ada di **Lainnya**. Di komputer, menu ada di sisi kiri.
 
