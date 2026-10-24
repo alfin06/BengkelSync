@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Bell, LogOut, Menu, UserRound, Wrench } from 'lucide-vue-next';
+import { Bell, LogOut, Menu, UserRound } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import AppLogo from '@/Components/layout/AppLogo.vue';
 import BranchSwitcher from '@/Components/layout/BranchSwitcher.vue';
 import FlashToasts from '@/Components/layout/FlashToasts.vue';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
@@ -37,7 +38,7 @@ const shopName = computed(() => page.props.tenant?.name ?? page.props.appName);
         <!-- Sidebar: tablet and desktop -->
         <aside class="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r bg-background md:flex">
             <div class="flex h-14 items-center gap-2 border-b px-4">
-                <Wrench class="size-5 text-primary" aria-hidden="true" />
+                <AppLogo class="size-6 shrink-0" />
                 <span class="truncate font-semibold">{{ shopName }}</span>
             </div>
 

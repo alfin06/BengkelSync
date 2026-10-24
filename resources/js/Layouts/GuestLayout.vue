@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
-import { Wrench } from 'lucide-vue-next';
+import AppLogo from '@/Components/layout/AppLogo.vue';
 import FlashToasts from '@/Components/layout/FlashToasts.vue';
 import { Card, CardContent, CardDescription, CardHeader } from '@/Components/ui/card';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ function setLocale(code: string): void {
         <FlashToasts />
 
         <div class="mb-6 flex items-center gap-2 text-lg font-semibold">
-            <Wrench class="size-6 text-primary" aria-hidden="true" />
+            <AppLogo class="size-8" />
             {{ page.props.appName }}
         </div>
 

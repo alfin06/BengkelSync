@@ -1,0 +1,22 @@
+<script setup lang="ts">
+/**
+ * BengkelSync app icon (same artwork as public/brand/bengkelsync-icon.svg).
+ * Decorative: the app or shop name is always shown next to it.
+ */
+</script>
+
+<template>
+    <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <rect width="120" height="120" rx="28" fill="#1F5BD0" />
+        <g transform="translate(-1.5 -5)">
+            <g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M26 32 V84" />
+                <path d="M26 32 H38 A12 12 0 0 1 38 56 H26" />
+                <path d="M26 56 H40 A14 14 0 0 1 40 84 H26" />
+                <path d="M96 38 C92 30 72 29 72 43 C72 57 97 53 97 70 C97 86 74 87 70 78" />
+            </g>
+            <path d="M26 97 Q58 110 85 99.6" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round" />
+            <polygon points="95.3,95.6 86.4,106.1 81.8,93.9" fill="#F59E0B" stroke="#F59E0B" stroke-width="2" stroke-linejoin="round" />
+        </g>
+    </svg>
+</template>
