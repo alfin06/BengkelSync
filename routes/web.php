@@ -28,6 +28,8 @@ use App\Http\Controllers\Purchasing\PurchaseController;
 use App\Http\Controllers\Purchasing\SupplierDebtController;
 use App\Http\Controllers\Purchasing\SupplierPaymentController;
 use App\Http\Controllers\Settings\InvoiceSettingsController;
+use App\Http\Controllers\Settings\RoleController;
+use App\Http\Controllers\Settings\UserController;
 use App\Http\Controllers\WorkOrders\WorkOrderController;
 use App\Http\Controllers\WorkOrders\WorkOrderMechanicController;
 use App\Http\Controllers\WorkOrders\WorkOrderPartController;
@@ -125,6 +127,16 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::post('/cash/transfer', [CashController::class, 'transfer'])->name('cash.transfer');
     Route::get('/cash/{cash_account}', [CashController::class, 'show'])->name('cash.show');
     Route::post('/cash/{cash_account}/count', [CashController::class, 'count'])->name('cash.count');
+
+    // Staff accounts and roles (the permission matrix)
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::put('/users/{user}/password', [UserController::class, 'resetPassword'])->middleware('throttle:10,1')->name('users.password');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::resource('roles', RoleController::class)->except(['show']);
+    });
 
     // Branch settings: tax on invoices and the invoice footer
     Route::get('/settings/invoice', [InvoiceSettingsController::class, 'edit'])->name('settings.invoice.edit');

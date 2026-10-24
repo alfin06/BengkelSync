@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Role;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -28,5 +30,12 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(! $this->app->isProduction());
 
         Password::defaults(fn () => Password::min(8)->letters()->numbers());
+
+        // Role is not tenant-scoped (spatie caches roles globally), so {role} in a URL is
+        // looked up within the active tenant: another shop's role is a 404.
+        Route::bind('role', fn (string $value) => Role::query()
+            ->forTenant(app(TenantContext::class)->requireTenant())
+            ->whereKey((int) $value)
+            ->firstOrFail());
     }
 }

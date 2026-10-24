@@ -17,6 +17,8 @@ Uses spatie/laravel-permission with teams (`team_id` = `tenant_id`).
 - **Permissions** are global, defined by the platform, and seeded. Format `resource.action`.
 - **Roles** are per tenant. Each new tenant gets the default roles copied in; the tenant owner can create or edit roles in a permission matrix UI.
 - **Branch access**: `branch_user` pivot. A user only works in the branches assigned to them. Owner and tenant-wide roles can be given "all branches".
+- **User management** (`user.*`): the owner (or a user with `user.create`) adds staff with a password and can set a new one later (which logs them out everywhere). Nobody can hand out more than they have: non-owners may only give roles whose permissions they hold, only their own branches, and never the Owner role or "all branches". Owner accounts can only be changed by an owner, and nobody edits their own account there (the profile page is for that).
+- **Permission matrix** (`role.*`, Owner by default): every role is a card per area with toggles for its actions; custom roles can be added (or copied from another role), renamed and deleted when unused. The Owner role is locked to all permissions; built-in roles can be changed but not deleted. Changes are audited and apply on the next request.
 
 Resources: `customer, vehicle, service, mechanic, work_order, invoice, payment, part, stock, supplier, purchase, supplier_payment, cash, expense, dashboard, report, branch, user, role, settings, audit_log`.
 Actions: `view, create, update, delete`, plus:
@@ -237,7 +239,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [ ] Expenses + receipt upload (paid from a cash account, e.g. petty cash)
 - [ ] Petty cash: transfers between cash accounts, cash count / adjustment, balances on the dashboard
 - [ ] Dashboard (single branch view)
-- [ ] User management (owner creates users with a password) + role/permission matrix UI
+- [x] User management (owner creates users with a password) + role/permission matrix UI
 - [ ] Shop & branch settings (profile, logo, tax, invoice footer)
 
 ### MVP — Pilot launch

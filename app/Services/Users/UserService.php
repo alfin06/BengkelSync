@@ -55,6 +55,50 @@ class UserService
         });
     }
 
+    /**
+     * Edit a staff account from user management: details, role, branches and whether it
+     * may log in. The owner safeguards apply to the role change and to deactivating.
+     *
+     * @param  array{name: string, email: string, phone?: string|null, locale?: string|null}  $attributes
+     * @param  list<int>  $branchIds
+     */
+    public function update(User $user, array $attributes, string $role, array $branchIds, bool $allBranches, bool $isActive): User
+    {
+        return DB::transaction(function () use ($user, $attributes, $role, $branchIds, $allBranches, $isActive): User {
+            if (! $user->hasRole($role)) {
+                $this->changeRole($user, $role);
+            }
+
+            if ($user->is_active && ! $isActive) {
+                $this->deactivate($user);
+            }
+
+            $attributes['phone'] = Phone::normalize($attributes['phone'] ?? null);
+            $user->fill([...$attributes, 'all_branches' => $allBranches, 'is_active' => $isActive])->save();
+
+            $oldBranches = $user->branches()->pluck('branches.id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+            $newBranches = $allBranches ? [] : $this->tenantBranchIds($branchIds);
+            sort($newBranches);
+            if ($oldBranches !== $newBranches) {
+                $user->branches()->sync($newBranches);
+                $this->audit->record('user_branches_changed', $user, ['branch_ids' => $oldBranches], ['branch_ids' => $newBranches]);
+            }
+
+            return $user;
+        });
+    }
+
+    /**
+     * Set a new password for someone who forgot theirs; they are logged out everywhere.
+     */
+    public function resetPassword(User $user, string $password): void
+    {
+        DB::transaction(function () use ($user, $password): void {
+            $this->changePassword($user, $password);
+            $this->endSessions($user);
+        });
+    }
+
     public function changeRole(User $user, RoleName|string $role): void
     {
         $roleName = $role instanceof RoleName ? $role->value : $role;

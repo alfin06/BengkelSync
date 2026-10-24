@@ -108,5 +108,10 @@ return [
         'lines.*.cash_tendered' => 'cash received',
         'lines.*.reference' => 'reference no.',
         'lines.*.id' => 'line',
+        'role_id' => 'role',
+        'branch_ids' => 'branches',
+        'all_branches' => 'all branches',
+        'is_active' => 'active status',
+        'permissions' => 'permissions',
     ],
 ];

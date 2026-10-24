@@ -268,5 +268,10 @@ return [
         'lines.*.cash_tendered' => 'uang diterima',
         'lines.*.reference' => 'no. referensi',
         'lines.*.id' => 'baris',
+        'role_id' => 'peran',
+        'branch_ids' => 'cabang',
+        'all_branches' => 'semua cabang',
+        'is_active' => 'status aktif',
+        'permissions' => 'hak akses',
     ],
 ];
