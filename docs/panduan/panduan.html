@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Panduan Pengguna BengkelSync</title>
+<meta name="author" content="BengkelSync">
+<meta name="description" content="Panduan pengguna BengkelSync untuk Admin Depan, Keuangan, Gudang, Kepala Cabang dan Pemilik bengkel.">
+<style>
+    @page { size: A4; margin: 16mm 16mm 18mm; }
+    @page cover { margin: 0; }
+    :root {
+        --blue: #1f5bd0;
+        --blue-soft: #eaf0fc;
+        --orange: #f59e0b;
+        --orange-soft: #fef5e4;
+        --red: #c2410c;
+        --red-soft: #fdeee6;
+        --green: #15803d;
+        --green-soft: #e8f6ed;
+        --ink: #1c1f26;
+        --muted: #5b6270;
+        --line: #e3e6ec;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: var(--ink); }
+    a { color: var(--blue); text-decoration: none; }
+    b, strong { font-weight: 600; }
+    code { font-family: Consolas, monospace; font-size: 9.5pt; background: #f2f4f7; padding: 0 3px; border-radius: 3px; }
+    h1, h2, h3 { line-height: 1.25; margin: 0; }
+    /* A small top margin: a heading flush at the top of a forced page break gets a doubled PDF bookmark title in Chromium. */
+    h2 { font-size: 20pt; font-weight: 600; margin-top: 1mm; }
+    h3 { font-size: 12.5pt; font-weight: 600; margin: 16px 0 6px; color: var(--blue); break-after: avoid; }
+    p { margin: 0 0 8px; }
+    ul, ol { margin: 0 0 8px; padding-left: 20px; }
+    li { margin-bottom: 3px; }
+
+    /* Cover */
+    .cover { page: cover; height: 296mm; display: flex; flex-direction: column; overflow: hidden; background: var(--blue); color: #fff; break-after: page; }
+    .cover-top { padding: 28mm 22mm 0; }
+    .cover-brand { display: flex; align-items: center; gap: 14px; font-size: 22pt; font-weight: 600; }
+    .cover-brand svg { width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 0 0 3px rgba(255,255,255,.35); }
+    .cover .cover-title { font-size: 34pt; font-weight: 700; margin: 26mm 0 6mm; line-height: 1.1; }
+    .cover .lead { font-size: 13pt; max-width: 135mm; opacity: .92; }
+    .cover .chips { margin-top: 8mm; display: flex; flex-wrap: wrap; gap: 8px; }
+    .cover .chips span { border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 3px 12px; font-size: 10pt; }
+    .cover-shot { margin: auto -30mm 0 22mm; height: 105mm; border-radius: 10px 10px 0 0; overflow: hidden; border: 4px solid rgba(255,255,255,.85); border-bottom: 0; }
+    .cover-shot img { display: block; width: 100%; }
+    .cover-swoosh { width: 70mm; height: 6px; background: var(--orange); border-radius: 3px; margin-top: 8mm; }
+
+    /* Section structure */
+    .chapter { break-before: page; }
+    .chapter-head { position: relative; border-bottom: 3px solid var(--blue); padding: 0 90px 6px 0; margin-bottom: 12px; }
+    .chapter-head .back, .chapter-head .who { position: absolute; right: 0; bottom: 8px; }
+    .chapter-head h2[data-num]::before { content: attr(data-num); display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: var(--blue); color: #fff; font-size: 13pt; font-weight: 700; margin-right: 10px; vertical-align: 3px; }
+    .chapter-head .who { font-size: 9pt; color: var(--muted); }
+    .back { font-size: 9pt; white-space: nowrap; }
+    .intro { color: var(--muted); font-size: 11pt; margin-bottom: 10px; }
+
+    .row { display: grid; grid-template-columns: 1fr 48mm; gap: 8mm; align-items: start; margin-bottom: 8px; break-inside: avoid; }
+    .row.wide { grid-template-columns: 1fr; }
+    .phone { border: 4px solid #1c1f26; border-radius: 16px; overflow: hidden; background: #fff; }
+    .phone img { display: block; width: 100%; max-height: 98mm; object-fit: cover; object-position: top; }
+    .phone.tall img { max-height: 118mm; }
+    figure { margin: 0; }
+    figcaption { font-size: 8.5pt; color: var(--muted); text-align: center; margin-top: 4px; }
+
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps > li { counter-increment: step; position: relative; padding-left: 30px; margin-bottom: 7px; }
+    .steps > li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 9pt; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+    .box { border-radius: 8px; padding: 8px 12px 8px 12px; margin: 8px 0; break-inside: avoid; border-left: 4px solid; }
+    .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+    .box .label { font-weight: 700; font-size: 9pt; text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 2px; }
+    .tip { background: var(--green-soft); border-color: var(--green); }
+    .tip .label { color: var(--green); }
+    .note { background: var(--blue-soft); border-color: var(--blue); }
+    .note .label { color: var(--blue); }
+    .warn { background: var(--orange-soft); border-color: var(--orange); }
+    .warn .label { color: #b45309; }
+
+    .ui { display: inline-block; background: #f2f4f7; border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; font-weight: 600; font-size: 9.5pt; white-space: nowrap; }
+    .ui.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 10pt; break-inside: avoid; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f5f7fa; font-weight: 600; }
+
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 6px 0 10px; }
+    .flow span { background: var(--blue-soft); color: var(--blue); border-radius: 999px; padding: 2px 10px; font-weight: 600; font-size: 9.5pt; }
+    .flow i { color: var(--muted); font-style: normal; }
+
+    /* Contents and quick start */
+    .toc { columns: 2; column-gap: 10mm; }
+    .toc a { display: block; break-inside: avoid; padding: 7px 10px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
+    .toc a b { color: var(--blue); }
+    .toc a small { display: block; color: var(--muted); font-size: 9pt; }
+    .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .role { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; break-inside: avoid; }
+    .role-title { margin: 0 0 6px; font-size: 11.5pt; font-weight: 600; }
+    .role-title small { font-weight: 400; color: var(--muted); font-size: 9pt; }
+    .role a { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 9px; border-radius: 999px; background: var(--blue-soft); font-size: 9pt; font-weight: 600; }
+
+    .checklist { list-style: none; padding: 0; }
+    .checklist li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+    .checklist li::before { content: ""; flex: none; width: 15px; height: 15px; border: 2px solid var(--blue); border-radius: 4px; margin-top: 2px; }
+
+    .glossary dt { font-weight: 600; color: var(--blue); }
+    .glossary dd { margin: 0 0 6px 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10mm; }
+</style>
+</head>
+<body>
+
+<!-- ======================= COVER ======================= -->
+<section class="cover">
+    <div class="cover-top">
+        <div class="cover-brand">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#1F5BD0"/><g transform="translate(-1.5 -5)"><g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M26 32 V84"/><path d="M26 32 H38 A12 12 0 0 1 38 56 H26"/><path d="M26 56 H40 A14 14 0 0 1 40 84 H26"/><path d="M96 38 C92 30 72 29 72 43 C72 57 97 53 97 70 C97 86 74 87 70 78"/></g><path d="M26 97 Q58 110 85 99.6" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/><polygon points="95.3,95.6 86.4,106.1 81.8,93.9" fill="#F59E0B" stroke="#F59E0B" stroke-width="2" stroke-linejoin="round"/></g></svg>
+            BengkelSync
+        </div>
+        <div class="cover-title">Panduan<br>Pengguna</div>
+        <p class="lead">Cara memakai BengkelSync sehari-hari: dari kendaraan masuk, SPK, invoice dan pembayaran, sampai stok, kas, dan pengaturan bengkel.</p>
+        <div class="cover-swoosh"></div>
+        <div class="chips"><span>Admin Depan</span><span>Keuangan</span><span>Gudang</span><span>Kepala Cabang</span><span>Pemilik</span></div>
+    </div>
+    <div class="cover-shot"><img src="img/00-beranda-desktop.jpg" alt=""></div>
+</section>
+
+<!-- ======================= CONTENTS ======================= -->
+<section id="daftar-isi">
+    <div class="chapter-head"><h2>Daftar isi</h2><span class="who">Klik judul untuk langsung ke bagian itu</span></div>
+    <p class="intro">Panduan ini interaktif: setiap judul di bawah bisa diklik, dan setiap halaman punya tautan <b>↑ Daftar isi</b> untuk kembali ke sini. Di pembaca PDF, daftar bagian juga ada di panel <b>Bookmark</b>.</p>
+    <nav class="toc">
+        <a href="#mulai"><b>Mulai cepat sesuai peran</b><small>Bagian mana yang perlu Anda baca</small></a>
+        <a href="#masuk"><b>1. Masuk ke aplikasi</b><small>Login, profil, cabang, notifikasi</small></a>
+        <a href="#layar"><b>2. Mengenal layar</b><small>Menu, Beranda, pilihan yang bisa diketik</small></a>
+        <a href="#spk"><b>3. Kendaraan masuk dan SPK</b><small>Buat SPK, jasa, part, status</small></a>
+        <a href="#invoice"><b>4. Invoice</b><small>Dari SPK, penjualan langsung, memperbaiki</small></a>
+        <a href="#bayar"><b>5. Pembayaran pelanggan</b><small>Beberapa metode, cicilan, kwitansi, piutang</small></a>
+        <a href="#pembelian"><b>6. Pembelian dan hutang supplier</b><small>Barang masuk, bayar supplier</small></a>
+        <a href="#stok"><b>7. Stok dan suku cadang</b><small>Barang, koreksi stok, stok menipis</small></a>
+        <a href="#kas"><b>8. Kas dan pengeluaran</b><small>Saldo, transfer, hitung kas, nota</small></a>
+        <a href="#data"><b>9. Pelanggan, kendaraan, jasa, mekanik</b><small>Data dasar bengkel</small></a>
+        <a href="#pemilik"><b>10. Pengaturan bengkel</b><small>Toko & cabang, pajak, kunci invoice</small></a>
+        <a href="#pengguna"><b>11. Pengguna dan hak akses</b><small>Akun staf, peran, matriks akses</small></a>
+        <a href="#aturan"><b>12. Aturan penting</b><small>Hal yang selalu berlaku</small></a>
+        <a href="#persiapan"><b>13. Persiapan sebelum mulai</b><small>Daftar centang untuk Pemilik</small></a>
+        <a href="#demo"><b>Lampiran A. Akun demo</b><small>Untuk latihan</small></a>
+        <a href="#istilah"><b>Lampiran B. Daftar istilah</b><small>SPK, piutang, kwitansi, …</small></a>
+    </nav>
+
+    <div class="box note" style="margin-top:14px"><span class="label">Catatan</span>
+        <p>Menu dan tombol yang tampil berbeda untuk setiap peran. Kalau sebuah menu atau tombol tidak terlihat, berarti peran Anda tidak punya akses ke situ. Minta Pemilik mengubahnya bila perlu (lihat <a href="#pengguna">bagian 11</a>).</p>
+    </div>
+</section>
+
+<!-- ======================= QUICK START ======================= -->
+<section class="chapter" id="mulai">
+    <div class="chapter-head"><h2>Mulai cepat sesuai peran</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <p class="intro">Tidak perlu membaca semuanya. Cari peran Anda, lalu klik bagian yang relevan.</p>
+    <div class="roles">
+        <div class="role">
+            <div class="role-title">Admin Depan <small>· kasir dan penerima kendaraan</small></div>
+            <p>Menerima kendaraan, membuat SPK, menagih, dan menerima pembayaran.</p>
+            <a href="#masuk">Masuk</a><a href="#layar">Layar</a><a href="#spk">SPK</a><a href="#invoice">Invoice</a><a href="#bayar">Pembayaran</a><a href="#pembelian-kecil">Belanja kecil</a><a href="#aturan">Aturan</a>
+        </div>
+        <div class="role">
+            <div class="role-title">Keuangan</div>
+            <p>Semua tugas Admin Depan, ditambah piutang, hutang, kas, dan pengeluaran.</p>
+            <a href="#bayar">Pembayaran</a><a href="#batal-bayar">Batal bayar</a><a href="#piutang">Piutang</a><a href="#hutang">Hutang supplier</a><a href="#kas">Kas</a><a href="#pengeluaran">Pengeluaran</a><a href="#beranda">Beranda</a>
+        </div>
+        <div class="role">
+            <div class="role-title">Gudang</div>
+            <p>Barang masuk dari supplier dan kerapian stok.</p>
+            <a href="#pembelian">Pembelian</a><a href="#stok">Stok</a><a href="#koreksi">Koreksi stok</a><a href="#data">Supplier</a>
+        </div>
+        <div class="role">
+            <div class="role-title">Pemilik <small>dan Kepala Cabang</small></div>
+            <p>Mengatur bengkel, cabang, staf, dan memantau usaha.</p>
+            <a href="#persiapan">Persiapan</a><a href="#pemilik">Pengaturan</a><a href="#cabang">Cabang</a><a href="#pengguna">Staf & akses</a><a href="#beranda">Beranda & laba</a><a href="#kunci">Kunci invoice</a>
+        </div>
+    </div>
+
+    <h3>Alur kerja bengkel dalam satu gambar</h3>
+    <div class="flow"><span>Kendaraan masuk</span><i>→</i><span>SPK</span><i>→</i><span>Dikerjakan</span><i>→</i><span>Selesai</span><i>→</i><span>Invoice</span><i>→</i><span>Bayar</span><i>→</i><span>Ditutup</span></div>
+    <p>Part yang dipakai di SPK langsung mengurangi stok. Uang yang diterima langsung menambah saldo akun kas. Sisa tagihan masuk ke <a href="#piutang">Piutang pelanggan</a>. Barang dari supplier menambah stok, dan yang belum dibayar masuk ke <a href="#hutang">Hutang supplier</a>.</p>
+</section>
+
+<!-- ======================= 1. LOGIN ======================= -->
+<section class="chapter" id="masuk">
+    <div class="chapter-head"><h2 data-num="1">Masuk ke aplikasi</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <ol class="steps">
+                <li>Buka alamat BengkelSync di browser HP atau komputer.</li>
+                <li>Isi <b>Email</b> dan <b>Kata sandi</b> yang diberikan Pemilik.</li>
+                <li>Tekan <span class="ui primary">Masuk</span>. Centang <b>Ingat saya</b> hanya di perangkat pribadi.</li>
+                <li>Setelah masuk pertama kali, ganti kata sandi di <b>Profil saya</b> → <b>Kata sandi</b>.</li>
+            </ol>
+            <div class="box tip"><span class="label">Lupa kata sandi?</span>
+                <p>Tekan <b>Lupa kata sandi?</b> di halaman masuk, isi email, lalu buka tautan yang dikirim ke email Anda. Bisa juga minta Pemilik membuat kata sandi baru.</p>
+            </div>
+            <div class="box warn"><span class="label">Jangan berbagi akun</span>
+                <p>Setiap perubahan tercatat atas nama orang yang masuk. Selalu tekan <b>Keluar</b> setelah memakai komputer bersama.</p>
+            </div>
+            <h3>Profil, cabang, dan notifikasi</h3>
+            <ul>
+                <li><b>Profil saya</b>: ubah nama, nomor HP, bahasa (Indonesia/English), dan kata sandi.</li>
+                <li><b>Pilih cabang</b> (atas layar): bila Anda punya akses ke beberapa cabang. Semua data (SPK, invoice, stok, kas) mengikuti cabang yang dipilih.</li>
+                <li><b>Lonceng</b>: pengingat stok menipis, tagihan pelanggan, dan tagihan supplier yang mendekati atau lewat jatuh tempo.</li>
+            </ul>
+        </div>
+        <figure><div class="phone"><img src="img/01-masuk.jpg" alt=""></div><figcaption>Halaman masuk</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 2. SCREEN ======================= -->
+<section class="chapter" id="layar">
+    <div class="chapter-head"><h2 data-num="2">Mengenal layar</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <ul>
+                <li><b>Di HP</b>: menu utama ada di bawah layar (<b>Beranda</b>, <b>SPK</b>, <b>Pelanggan</b>, <b>Suku cadang</b>). Menu lain ada di <b>Lainnya</b>.</li>
+                <li><b>Di komputer</b>: semua menu ada di sisi kiri.</li>
+                <li>Di atas layar ada nama bengkel, <b>pilihan cabang</b>, dan <b>lonceng notifikasi</b>.</li>
+            </ul>
+            <h3 id="beranda">Beranda</h3>
+            <p>Ringkasan bengkel hari ini: kendaraan per status (Antri, Dikerjakan, Tunggu part, Selesai), stok menipis, piutang, tagihan supplier, dan saldo kas.</p>
+            <ul>
+                <li>Pilih periode: <b>Hari ini</b>, <b>Minggu ini</b>, <b>Bulan ini</b>, atau tanggal sendiri.</li>
+                <li><b>Penjualan</b> adalah total invoice; <b>Uang masuk</b> adalah uang yang benar-benar diterima. Biaya kartu tidak dihitung sebagai pendapatan.</li>
+                <li>Keuangan juga melihat pengeluaran, grafik 12 bulan, jasa dan part terlaris, dan pekerjaan per mekanik.</li>
+                <li><b>Laba kotor</b> hanya terlihat oleh Pemilik.</li>
+            </ul>
+        </div>
+        <figure><div class="phone tall"><img src="img/02-beranda.jpg" alt=""></div><figcaption>Beranda di HP</figcaption></figure>
+    </div>
+    <div class="row" id="pilihan">
+        <div>
+            <h3>Pilihan (dropdown) bisa diketik</h3>
+            <ol class="steps">
+                <li>Ketuk kolom pilihan, misalnya <b>Supplier</b>.</li>
+                <li>Ketik sebagian nama. Daftar langsung tersaring.</li>
+                <li>Ketuk pilihan yang benar, atau tekan <b>Enter</b>.</li>
+            </ol>
+            <div class="box note"><span class="label">Di HP</span><p>Daftar pendek (6 pilihan atau kurang) langsung terbuka tanpa keyboard, supaya tidak tertutup.</p></div>
+        </div>
+        <figure><div class="phone"><img src="img/19-pilihan-ketik.jpg" alt=""></div><figcaption>Mengetik "motor" menyaring supplier</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 3. SPK ======================= -->
+<section class="chapter" id="spk">
+    <div class="chapter-head"><h2 data-num="3">Kendaraan masuk dan SPK</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <p class="intro">SPK (Surat Perintah Kerja) mencatat satu kunjungan kendaraan: keluhan, pekerjaan, part, dan mekanik.</p>
+    <div class="row">
+        <div>
+            <h3 style="margin-top:0">Membuat SPK</h3>
+            <ol class="steps">
+                <li>Buka <b>SPK</b> → <span class="ui primary">Buat SPK</span>.</li>
+                <li>Ketik plat nomor. Kendaraan lama muncul di daftar; kendaraan baru: pilih <b>Kendaraan baru</b> dan isi data pemiliknya (atau <b>Pelanggan baru</b>).</li>
+                <li>Tulis <b>Keluhan</b>, <b>Kilometer</b>, dan <b>Perkiraan selesai</b>. Aplikasi memberi peringatan bila kilometer lebih kecil dari kunjungan sebelumnya.</li>
+                <li>Tekan <span class="ui primary">Simpan &amp; masuk antrian</span>. Untuk perkiraan biaya yang belum pasti dikerjakan, pakai <b>Simpan draft</b>.</li>
+                <li>Bila perlu, tekan <b>Cetak SPK</b> untuk lembar kerja mekanik (tanpa harga).</li>
+            </ol>
+        </div>
+        <figure><div class="phone"><img src="img/04-spk-baru.jpg" alt=""></div><figcaption>Kendaraan masuk</figcaption></figure>
+    </div>
+    <h3>Status SPK</h3>
+    <div class="flow"><span>Draft</span><i>→</i><span>Antri</span><i>→</i><span>Dikerjakan</span><i>⇄</i><span>Tunggu part</span><i>→</i><span>Selesai</span><i>→</i><span>Ditagih</span><i>→</i><span>Ditutup</span></div>
+    <p>SPK menjadi <b>Ditagih</b> saat invoice dibuat, dan <b>Ditutup</b> otomatis saat invoice lunas.</p>
+    <div class="row">
+        <div>
+            <h3 id="spk-kerja">Selama dikerjakan</h3>
+            <ul>
+                <li><b>Mekanik</b> → <b>Atur</b>: pilih mekanik yang mengerjakan.</li>
+                <li><span class="ui">+ Tambah jasa</span>: pilih dari Daftar jasa atau ketik sendiri, lalu isi harganya.</li>
+                <li><span class="ui">+ Tambah part</span>: pilih barang dan jumlahnya.</li>
+                <li><b>Daftar cek</b>: pekerjaan yang bisa dicentang satu per satu.</li>
+                <li>Tombol status di atas: <b>Kerjakan</b>, <b>Tunggu part</b>, <b>Selesai</b>.</li>
+                <li><b>Riwayat servis</b>: servis kendaraan ini sebelumnya, termasuk di cabang lain.</li>
+            </ul>
+            <div class="box warn"><span class="label">Stok</span><p>Stok langsung berkurang saat part disimpan di SPK, dan kembali bila part dihapus. Barang yang stoknya habis tidak bisa dipakai.</p></div>
+            <div class="box note"><span class="label">Membatalkan SPK</span><p><b>Batalkan SPK</b> (alasan wajib) hanya bisa sebelum invoice dibuat. Part yang sudah dipakai kembali ke stok.</p></div>
+        </div>
+        <figure><div class="phone tall"><img src="img/05-spk-detail.jpg" alt=""></div><figcaption>Halaman SPK yang sedang dikerjakan</figcaption></figure>
+    </div>
+    <div class="row">
+        <div>
+            <h3>Daftar SPK</h3>
+            <p>Menu <b>SPK</b> menampilkan semua kendaraan yang sedang ditangani. Saring dengan tombol status (<b>Aktif</b>, <b>Antri</b>, <b>Dikerjakan</b>, …) atau cari plat nomor, nomor SPK, atau nama pelanggan.</p>
+        </div>
+        <figure><div class="phone"><img src="img/03-spk-daftar.jpg" alt=""></div><figcaption>Daftar SPK</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 4. INVOICE ======================= -->
+<section class="chapter" id="invoice">
+    <div class="chapter-head"><h2 data-num="4">Invoice</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <h3 style="margin-top:0">Invoice dari SPK</h3>
+            <ol class="steps">
+                <li>Setelah SPK berstatus <b>Selesai</b>, tekan <span class="ui primary">Buat invoice</span>.</li>
+                <li>Jasa dan part terisi otomatis dari SPK. Harga dan diskon masih bisa disesuaikan.</li>
+                <li>Tekan <span class="ui primary">Simpan invoice</span>. SPK berubah menjadi <b>Ditagih</b>.</li>
+                <li>Tekan <b>Cetak</b>. Invoice berukuran <b>A5</b>, cocok untuk kertas 2 ply.</li>
+            </ol>
+            <p>Bila pajak dinyalakan di <a href="#pajak">Pajak &amp; invoice</a>, pajak dihitung otomatis.</p>
+            <h3 id="perbaiki">Memperbaiki invoice</h3>
+            <ul>
+                <li>Tekan <span class="ui">Ubah</span>, perbaiki baris yang salah, isi <b>alasan</b>, lalu <b>Simpan perubahan</b>.</li>
+                <li>Nomor invoice tetap. Versi lama tersimpan di <b>Riwayat perubahan</b>.</li>
+                <li>Admin Depan hanya bisa mengubah invoice yang <b>belum ada pembayarannya</b>; invoice yang sudah dibayar diubah oleh Keuangan.</li>
+                <li>Total baru tidak boleh lebih kecil dari yang sudah dibayar.</li>
+            </ul>
+        </div>
+        <figure><div class="phone tall"><img src="img/06-invoice.jpg" alt=""></div><figcaption>Invoice yang baru dibayar sebagian</figcaption></figure>
+    </div>
+    <div class="row" id="penjualan-langsung">
+        <div>
+            <h3>Penjualan langsung (tanpa SPK)</h3>
+            <p>Untuk pembeli yang hanya membeli barang, misalnya oli atau aki.</p>
+            <ol class="steps">
+                <li>Buka <b>Invoice</b> → <b>Penjualan langsung</b>.</li>
+                <li>Pilih <b>Pelanggan umum</b> bila data pembeli tidak perlu dicatat, atau <b>Pilih pelanggan</b>.</li>
+                <li>Tambahkan part, jasa, atau biaya lain, lalu simpan. Stok langsung berkurang.</li>
+            </ol>
+            <h3>Membatalkan invoice</h3>
+            <p><b>Batalkan invoice</b> (alasan wajib) hanya bisa bila tidak ada pembayaran yang masih berlaku; batalkan pembayarannya dulu. Invoice dari SPK: SPK kembali ke <b>Selesai</b> dan bisa ditagih lagi. Penjualan langsung: part kembali ke stok.</p>
+        </div>
+        <figure><div class="phone"><img src="img/09-penjualan-langsung.jpg" alt=""></div><figcaption>Penjualan langsung</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 5. PAYMENTS ======================= -->
+<section class="chapter" id="bayar">
+    <div class="chapter-head"><h2 data-num="5">Pembayaran pelanggan</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <ol class="steps">
+                <li>Di halaman invoice, tekan <span class="ui primary">Bayar</span>.</li>
+                <li>Pilih metode: <b>Tunai</b>, transfer, QRIS, kartu, dll. Untuk beberapa metode sekaligus, tekan <b>Metode lain</b>.</li>
+                <li>Isi <b>Jumlah</b>. Untuk tunai, isi <b>Uang diterima</b>; kembalian dihitung otomatis.</li>
+                <li>Metode tertentu wajib diisi <b>No. referensi</b>. Kartu kredit bisa dikenai <b>Biaya kartu</b> di atas tagihan.</li>
+                <li>Bila belum lunas, isi <b>Jatuh tempo sisa</b>. Sisanya masuk ke <a href="#piutang">Piutang pelanggan</a>.</li>
+                <li>Tekan <span class="ui primary">Simpan pembayaran</span>, lalu <b>Cetak kwitansi</b> bila diminta.</li>
+            </ol>
+            <div class="box tip"><span class="label">Melunasi kemudian</span><p>Saat pelanggan kembali, buka invoice-nya (atau lewat Piutang pelanggan) dan tekan <b>Bayar</b> lagi. Metodenya boleh berbeda. Setelah lunas, SPK otomatis <b>Ditutup</b>.</p></div>
+        </div>
+        <figure><div class="phone"><img src="img/07-bayar.jpg" alt=""></div><figcaption>Bayar dengan satu atau beberapa metode</figcaption></figure>
+    </div>
+    <div class="row">
+        <div>
+            <h3 id="piutang">Piutang pelanggan</h3>
+            <p>Semua invoice yang belum lunas, diurutkan dari jatuh tempo terdekat, dengan total piutang dan yang sudah lewat jatuh tempo. Pengingat muncul di lonceng 3 hari sebelum dan saat lewat jatuh tempo.</p>
+            <h3 id="batal-bayar">Membatalkan pembayaran (Keuangan)</h3>
+            <ul>
+                <li>Di bagian <b>Pembayaran</b> pada invoice: <b>Batalkan baris</b> untuk satu metode, atau <b>Batalkan kwitansi</b> untuk semuanya. Alasan wajib.</li>
+                <li>Tidak ada yang dihapus: pembayaran tetap terlihat dengan tanda <b>BATAL</b>, uangnya keluar lagi dari akun kas, dan jumlahnya kembali menjadi sisa tagihan.</li>
+            </ul>
+        </div>
+        <figure><div class="phone"><img src="img/08-piutang.jpg" alt=""></div><figcaption>Piutang pelanggan</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 6. PURCHASES ======================= -->
+<section class="chapter" id="pembelian">
+    <div class="chapter-head"><h2 data-num="6">Pembelian dan hutang supplier</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <ol class="steps">
+                <li>Buka <b>Pembelian</b> → <span class="ui primary">Catat pembelian</span>.</li>
+                <li>Pilih <b>Supplier</b> (bisa diketik), <b>Tanggal terima</b>, dan <b>No. nota supplier</b>.</li>
+                <li>Tambahkan barang sesuai nota: jumlah dan harga beli.</li>
+                <li>Pilih bayar sekarang, sebagian, atau nanti, lalu <b>Simpan</b>. Stok langsung bertambah.</li>
+            </ol>
+            <div class="box note" id="pembelian-kecil"><span class="label">Admin Depan</span><p>Boleh <b>Lunasi sekarang dari kas</b> hanya bila lunas, dibayar dari laci kasir atau kas kecil, dan tidak melebihi batas bayar tunai cabang (bawaan Rp 500.000). Selebihnya dicatat sebagai hutang dan dibayar oleh Keuangan.</p></div>
+        </div>
+        <figure><div class="phone"><img src="img/10-pembelian.jpg" alt=""></div><figcaption>Catat pembelian</figcaption></figure>
+    </div>
+    <div class="row">
+        <div>
+            <h3 id="hutang">Hutang supplier</h3>
+            <ul>
+                <li>Menampilkan pembelian yang belum lunas, dengan tanda <b>Lewat jatuh tempo</b>, <b>Dibayar sebagian</b>, atau <b>Belum dibayar</b>.</li>
+                <li>Tekan <b>Bayar</b>, pilih akun <b>Dibayar dari</b> dan jumlahnya. Boleh dicicil.</li>
+                <li>Pembayaran atau pembelian yang salah dibatalkan dengan alasan; stok dan kas ikut disesuaikan.</li>
+            </ul>
+        </div>
+        <figure><div class="phone"><img src="img/11-hutang-supplier.jpg" alt=""></div><figcaption>Hutang supplier</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 7. STOCK ======================= -->
+<section class="chapter" id="stok">
+    <div class="chapter-head"><h2 data-num="7">Stok dan suku cadang</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <ul>
+                <li><span class="ui primary">Tambah barang</span>: nama, kode, merek, satuan, harga beli dan harga jual, serta batas stok minimum. Satuan liter, meter, dan kg boleh desimal (mis. 4,2 liter).</li>
+                <li>Stok bertambah lewat <a href="#pembelian">Pembelian</a> dan berkurang lewat <a href="#spk">SPK</a> atau <a href="#penjualan-langsung">penjualan langsung</a>.</li>
+                <li id="koreksi"><b>Koreksi stok</b> (stok opname): isi jumlah yang benar-benar ada di rak, beserta alasannya.</li>
+                <li><b>Riwayat stok</b>: setiap barang masuk dan keluar beserta sumbernya.</li>
+                <li>Barang di bawah batas minimum ditandai <b>Habis</b> atau menipis, dan muncul di lonceng serta Beranda.</li>
+            </ul>
+            <div class="box warn"><span class="label">Penting</span><p>Jangan mengubah stok dengan cara lain. Kalau angka di sistem tidak cocok dengan rak, pakai <b>Koreksi stok</b> dengan alasan yang jelas.</p></div>
+        </div>
+        <figure><div class="phone"><img src="img/14-suku-cadang.jpg" alt=""></div><figcaption>Suku cadang dan peringatan stok</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 8. CASH ======================= -->
+<section class="chapter" id="kas">
+    <div class="chapter-head"><h2 data-num="8">Kas dan pengeluaran</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <ul>
+                <li><b>Kas</b> menampilkan saldo setiap akun (Laci Kasir, Kas Kecil, rekening bank). Ketuk akun untuk melihat <b>Riwayat</b>.</li>
+                <li><span class="ui primary">Transfer</span>: memindahkan uang antar akun, mis. mengisi kas kecil dari laci kasir atau menyetor ke bank.</li>
+                <li><b>Hitung kas</b>: isi jumlah uang yang benar-benar ada; selisihnya dicatat dengan alasan. Dipakai juga untuk <b>saldo awal</b>.</li>
+                <li>Laci kasir dan kas kecil tidak bisa minus; saldo bank boleh minus.</li>
+            </ul>
+        </div>
+        <figure><div class="phone"><img src="img/13-kas.jpg" alt=""></div><figcaption>Saldo kas per akun</figcaption></figure>
+    </div>
+    <div class="row">
+        <div>
+            <h3 id="pengeluaran">Pengeluaran</h3>
+            <ol class="steps">
+                <li>Buka <b>Pengeluaran</b> → <span class="ui primary">Catat pengeluaran</span>.</li>
+                <li>Pilih <b>Kategori</b>, tulis <b>Keterangan</b> dan <b>Jumlah</b>, lalu pilih akun <b>Dibayar dari</b>.</li>
+                <li>Tambahkan <b>Foto nota</b> langsung dari kamera HP, lalu <b>Simpan</b>.</li>
+            </ol>
+            <ul>
+                <li>Pengeluaran yang salah: <b>Batalkan</b> (alasan wajib); uangnya kembali ke akun kas.</li>
+                <li>Admin Depan hanya dari kas, sampai batas bayar tunai cabang.</li>
+                <li>Kategori diatur Pemilik dan Keuangan. Kategori <b>Gaji &amp; bonus</b> hanya terlihat oleh Pemilik.</li>
+            </ul>
+            <div class="box tip"><span class="label">Saran</span><p>Bayar gaji dari rekening bank. Pengeluaran dari laci kasir tetap terlihat sebagai uang keluar oleh orang yang bisa melihat kas, walau keterangannya disembunyikan.</p></div>
+        </div>
+        <figure><div class="phone"><img src="img/12-pengeluaran.jpg" alt=""></div><figcaption>Pengeluaran baru</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 9. MASTER DATA ======================= -->
+<section class="chapter" id="data">
+    <div class="chapter-head"><h2 data-num="9">Pelanggan, kendaraan, jasa, mekanik</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="two">
+        <div>
+            <h3 style="margin-top:0">Pelanggan dan kendaraan</h3>
+            <ul>
+                <li>Nomor HP boleh ditulis <code>08…</code>. Aplikasi memberi peringatan bila nomor yang sama sudah dipakai pelanggan lain.</li>
+                <li>Plat nomor dirapikan otomatis, mis. <code>B 1234 XYZ</code>.</li>
+                <li>Kendaraan pindah tangan: <b>Pemilik baru</b>. Pemilik lama tetap tercatat di <b>Riwayat pemilik</b>.</li>
+                <li>Pelanggan yang masih punya kendaraan tidak bisa dihapus.</li>
+            </ul>
+            <h3>Supplier</h3>
+            <p>Daftar toko tempat bengkel membeli barang. Dipakai saat <a href="#pembelian">mencatat pembelian</a>.</p>
+        </div>
+        <div>
+            <h3 style="margin-top:0">Daftar jasa</h3>
+            <p>Pekerjaan dan harga standar untuk mempercepat pengisian SPK. Harga tetap bisa diubah di setiap SPK.</p>
+            <h3>Mekanik</h3>
+            <ul>
+                <li>Mekanik tidak perlu akun untuk masuk aplikasi.</li>
+                <li>NIK dan foto KTP disimpan aman dan hanya terlihat oleh peran yang berhak.</li>
+            </ul>
+            <div class="box note"><span class="label">Catatan</span><p>Jasa dan mekanik yang sudah pernah dipakai tidak bisa dihapus, tetapi bisa dinonaktifkan.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================= 10. SETTINGS ======================= -->
+<section class="chapter" id="pemilik">
+    <div class="chapter-head"><h2 data-num="10">Pengaturan bengkel</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <p class="intro">Untuk Pemilik, dan sebagian untuk Kepala Cabang.</p>
+    <div class="row">
+        <div>
+            <h3 style="margin-top:0" id="kunci">Toko &amp; cabang: data toko</h3>
+            <ul>
+                <li><b>Nama toko</b>: tampil di atas aplikasi dan di semua dokumen.</li>
+                <li><b>Kunci invoice setelah</b> … hari: invoice yang lebih lama tidak bisa diubah atau dibatalkan, begitu juga pembayarannya, kecuali oleh Pemilik. Perubahan oleh Pemilik ditandai <b>Diubah setelah periode dikunci</b>. Pembayaran baru untuk invoice lama tetap bisa diterima.</li>
+            </ul>
+            <h3 id="cabang">Cabang</h3>
+            <ul>
+                <li><span class="ui primary">+ Tambah cabang</span> (Pemilik): nama, <b>Kode</b> (2–6 huruf/angka, dipakai di nomor dokumen, mis. <code>KLM/INV/2026/00001</code>), alamat, telepon, NPWP, <b>Zona waktu</b> (WIB/WITA/WIT), dan <b>Logo</b>. Cabang baru otomatis mendapat Laci Kasir, Kas Kecil, dan metode Tunai; stok mulai dari nol.</li>
+                <li><b>Ubah</b> (ikon pensil): Pemilik untuk semua cabang, Kepala Cabang untuk cabangnya sendiri. Kode tidak bisa diubah setelah cabang mengeluarkan dokumen pertama.</li>
+                <li><b>Hapus</b> (ikon tempat sampah, Pemilik): ditolak bila masih ada SPK terbuka, invoice belum lunas, hutang supplier, atau saldo kas. Cabang yang sudah punya data <b>tidak dihapus datanya</b>, hanya disembunyikan, dan bisa dikembalikan dengan <b>Pulihkan</b>.</li>
+            </ul>
+        </div>
+        <figure><div class="phone tall"><img src="img/15-toko-cabang.jpg" alt=""></div><figcaption>Toko &amp; cabang</figcaption></figure>
+    </div>
+    <h3 id="pajak">Pajak &amp; invoice (per cabang)</h3>
+    <ul>
+        <li><b>Tagih pajak di invoice</b>: nyalakan bila cabang memungut pajak, lalu isi nama dan tarif (mis. PPN 11%).</li>
+        <li>Harga <b>Sudah termasuk pajak</b> atau <b>Belum termasuk pajak</b>.</li>
+        <li><b>Catatan kaki invoice</b>: mis. nomor rekening, garansi servis, atau ucapan terima kasih.</li>
+        <li>Perubahan hanya berlaku untuk invoice baru; invoice lama tidak berubah.</li>
+    </ul>
+    <h3>Akun kas &amp; pembayaran</h3>
+    <p>Akun kas dan rekening bank, metode pembayaran (beserta biaya kartu dan kewajiban no. referensi), serta batas bayar tunai untuk Admin Depan.</p>
+</section>
+
+<!-- ======================= 11. USERS ======================= -->
+<section class="chapter" id="pengguna">
+    <div class="chapter-head"><h2 data-num="11">Pengguna dan hak akses</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="row">
+        <div>
+            <h3 style="margin-top:0">Akun staf (menu Pengguna &amp; akses)</h3>
+            <ul>
+                <li><span class="ui primary">Tambah pengguna</span>: nama, <b>Email (untuk masuk)</b>, <b>Kata sandi</b> (minimal 8 karakter, huruf dan angka), <b>Peran</b>, dan <b>Cabang</b>.</li>
+                <li><b>Kata sandi</b>: buat kata sandi baru untuk staf yang lupa. Staf otomatis keluar dari semua perangkat.</li>
+                <li><b>Boleh masuk (aktif)</b>: matikan untuk staf yang berhenti. Akunnya langsung tidak bisa dipakai; riwayat kerjanya tetap ada.</li>
+                <li>Selalu ada minimal satu Pemilik aktif. Akun sendiri diubah lewat <b>Profil saya</b>.</li>
+            </ul>
+            <div class="box warn"><span class="label">Keamanan</span><p>Berikan email dan kata sandi kepada staf secara langsung, jangan lewat grup chat.</p></div>
+        </div>
+        <figure><div class="phone"><img src="img/16-pengguna.jpg" alt=""></div><figcaption>Daftar pengguna</figcaption></figure>
+    </div>
+    <div class="row">
+        <div>
+            <h3>Peran &amp; hak akses</h3>
+            <ul>
+                <li>Ubah apa saja yang boleh dilakukan setiap peran dengan menyalakan atau mematikan hak akses per bagian.</li>
+                <li><b>Peran baru</b>: mis. Kasir atau Kepala Mekanik. <b>Salin</b> peran yang mirip agar lebih cepat.</li>
+                <li>Peran bawaan tidak bisa dihapus, tetapi hak aksesnya bisa diubah.</li>
+                <li>Siapa pun hanya bisa memberi hak akses yang ia miliki sendiri.</li>
+            </ul>
+            <table>
+                <tr><th>Peran bawaan</th><th>Singkatnya</th></tr>
+                <tr><td><b>Pemilik</b></td><td>Semua hal.</td></tr>
+                <tr><td><b>Kepala Cabang</b></td><td>Semua hal di cabangnya, kecuali peran, data toko, gaji, laba, dan invoice terkunci.</td></tr>
+                <tr><td><b>Admin Depan</b></td><td>Pelanggan, kendaraan, SPK, invoice, terima pembayaran, lihat stok, catat pembelian, pengeluaran kecil.</td></tr>
+                <tr><td><b>Keuangan</b></td><td>Tugas Admin Depan, ditambah mekanik, invoice yang sudah dibayar, pembatalan, bayar supplier, kas, pengeluaran, laporan.</td></tr>
+                <tr><td><b>Gudang</b></td><td>Suku cadang, stok, supplier, pembelian.</td></tr>
+            </table>
+        </div>
+        <figure><div class="phone"><img src="img/18-hak-akses.jpg" alt=""></div><figcaption>Hak akses peran Admin Depan</figcaption></figure>
+    </div>
+</section>
+
+<!-- ======================= 12. RULES ======================= -->
+<section class="chapter" id="aturan">
+    <div class="chapter-head"><h2 data-num="12">Aturan penting</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <div class="box note"><span class="label">Tidak ada yang dihapus diam-diam</span><p>Invoice, pembayaran, pembelian, dan pengeluaran yang salah dibatalkan dengan alasan. Catatannya tetap ada, sehingga semuanya bisa ditelusuri.</p></div>
+    <div class="box note"><span class="label">Setiap perubahan tercatat</span><p>Siapa, kapan, dan apa yang diubah.</p></div>
+    <div class="box warn"><span class="label">Stok dan kas hanya berubah lewat transaksi</span><p>SPK, invoice, pembelian, pembayaran, pengeluaran, koreksi stok, dan hitung kas. Kalau angkanya tidak cocok, pakai <a href="#koreksi">Koreksi stok</a> atau <a href="#kas">Hitung kas</a> dengan alasan yang jelas.</p></div>
+    <div class="box tip"><span class="label">Mencetak</span><p>Tombol cetak membuka jendela cetak browser. Pilih ukuran kertas <b>A5</b>. Untuk menyimpan sebagai PDF, pilih printer <b>Simpan sebagai PDF</b>.</p></div>
+    <div class="box tip"><span class="label">Pesan merah</span><p>Baca isinya: biasanya menjelaskan aturan yang mencegah perubahan, mis. stok tidak cukup atau invoice sudah dikunci.</p></div>
+</section>
+
+<!-- ======================= 13. SETUP ======================= -->
+<section class="chapter" id="persiapan">
+    <div class="chapter-head"><h2 data-num="13">Persiapan sebelum mulai</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <p class="intro">Daftar centang untuk Pemilik. Cetak halaman ini dan centang satu per satu.</p>
+    <ul class="checklist">
+        <li><span>Isi <a href="#pemilik">Toko &amp; cabang</a>: nama, alamat, telepon, NPWP, dan logo.</span></li>
+        <li><span>Atur <a href="#pajak">Pajak &amp; invoice</a>: pakai pajak atau tidak, dan catatan kaki invoice.</span></li>
+        <li><span>Periksa <b>Akun kas &amp; pembayaran</b>: akun kas, rekening bank, metode pembayaran, dan batas bayar tunai.</span></li>
+        <li><span>Isi saldo awal setiap akun lewat <a href="#kas">Kas → Hitung kas</a> (alasan: "saldo awal").</span></li>
+        <li><span>Masukkan <b>Daftar jasa</b>, <b>Mekanik</b>, dan <b>Supplier</b>.</span></li>
+        <li><span>Masukkan <b>Suku cadang</b> beserta stok awalnya lewat <a href="#koreksi">Koreksi stok</a> (alasan: "stok awal").</span></li>
+        <li><span>Buat akun Admin Depan dan Keuangan di <a href="#pengguna">Pengguna &amp; akses</a>.</span></li>
+        <li><span>Coba cetak satu invoice dan satu kwitansi di printer bengkel.</span></li>
+        <li><span>Latih staf dengan satu SPK percobaan dari masuk sampai lunas.</span></li>
+    </ul>
+</section>
+
+<!-- ======================= APPENDICES ======================= -->
+<section class="chapter" id="demo">
+    <div class="chapter-head"><h2>Lampiran A. Akun demo</h2><a class="back" href="#daftar-isi">↑ Daftar isi</a></div>
+    <p>Akun ini <b>hanya ada di aplikasi demo</b> untuk latihan, bukan di bengkel yang sudah berjalan. Semua akun demo memakai kata sandi <code>password1</code>.</p>
+    <table>
+        <tr><th>Email</th><th>Peran</th><th>Cabang</th></tr>
+        <tr><td><code>owner@demo.test</code></td><td>Pemilik</td><td>Semua cabang</td></tr>
+        <tr><td><code>manager@demo.test</code></td><td>Kepala Cabang</td><td>Pusat dan Cabang Timur</td></tr>
+        <tr><td><code>frontdesk@demo.test</code></td><td>Admin Depan</td><td>Pusat</td></tr>
+        <tr><td><code>finance@demo.test</code></td><td>Keuangan</td><td>Pusat</td></tr>
+        <tr><td><code>warehouse@demo.test</code></td><td>Gudang</td><td>Pusat dan Cabang Timur</td></tr>
+    </table>
+    <p>Bengkel demo bernama <b>Bengkel Demo</b> dengan dua cabang, <b>Pusat</b> dan <b>Cabang Timur</b>. Isinya contoh SPK di setiap status, invoice yang dibayar sebagian dengan dua metode, pembelian, pengeluaran, dan barang yang stoknya menipis. Semua nama dan data di demo (dan di gambar panduan ini) adalah fiktif.</p>
+    <div class="box tip"><span class="label">Coba sebagai peran lain</span><p>Masuk dengan <code>frontdesk@demo.test</code> atau <code>finance@demo.test</code> untuk melihat menu yang tampil bagi peran itu.</p></div>
+
+    <h2 id="istilah" style="margin-top:14mm; border-bottom:3px solid var(--blue); padding-bottom:6px; margin-bottom:12px">Lampiran B. Daftar istilah</h2>
+    <dl class="glossary two">
+        <div>
+            <dt>SPK (Surat Perintah Kerja)</dt><dd>Catatan satu kunjungan kendaraan: keluhan, jasa, part, mekanik.</dd>
+            <dt>Invoice</dt><dd>Tagihan kepada pelanggan, dari SPK atau penjualan langsung.</dd>
+            <dt>Kwitansi</dt><dd>Bukti pembayaran; satu kwitansi bisa berisi beberapa metode bayar.</dd>
+            <dt>Piutang pelanggan</dt><dd>Tagihan pelanggan yang belum lunas.</dd>
+            <dt>Hutang supplier</dt><dd>Pembelian dari supplier yang belum dibayar lunas.</dd>
+            <dt>Pelanggan umum</dt><dd>Pembeli langsung yang datanya tidak perlu dicatat.</dd>
+        </div>
+        <div>
+            <dt>Laci Kasir</dt><dd>Uang tunai di meja kasir.</dd>
+            <dt>Kas Kecil</dt><dd>Uang tunai untuk belanja kecil sehari-hari.</dd>
+            <dt>Hitung kas</dt><dd>Menyamakan saldo di sistem dengan uang yang benar-benar ada.</dd>
+            <dt>Koreksi stok</dt><dd>Menyamakan stok di sistem dengan barang di rak (stok opname).</dd>
+            <dt>Kunci invoice</dt><dd>Invoice lama tidak bisa diubah lagi, kecuali oleh Pemilik.</dd>
+            <dt>Jatuh tempo</dt><dd>Tanggal terakhir sisa tagihan harus dibayar.</dd>
+        </div>
+    </dl>
+</section>
+
+</body>
+</html>

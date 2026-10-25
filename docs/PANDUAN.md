@@ -1,5 +1,7 @@
 # Panduan Pengguna BengkelSync
 
+> Versi PDF dengan gambar layar, daftar isi yang bisa diklik, dan daftar centang: [Panduan-BengkelSync.pdf](Panduan-BengkelSync.pdf). Sumbernya ada di `docs/panduan/` (`node docs/panduan/build.mjs capture|pdf`).
+
 Panduan singkat untuk staf bengkel: Admin Depan, Keuangan, dan Pemilik. Aplikasi bisa dipakai di HP, tablet, maupun komputer. Di HP, menu utama ada di bawah layar; menu lain ada di **Lainnya**. Di komputer, menu ada di sisi kiri.
 
 > Menu yang tampil berbeda untuk setiap peran. Kalau sebuah menu atau tombol tidak terlihat, berarti peran Anda tidak punya akses ke situ. Minta pemilik bengkel mengubahnya bila perlu.
