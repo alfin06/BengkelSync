@@ -12,6 +12,7 @@ use App\Services\Inventory\StockService;
 use App\Services\Invoicing\InvoiceCalculator;
 use App\Services\Invoicing\InvoiceService;
 use App\Services\Tenancy\ProvisionedTenant;
+use App\Services\WorkOrders\WorkOrderService;
 use Inertia\Testing\AssertableInertia as Assert;
 
 describe('InvoiceCalculator', function () {
@@ -94,6 +95,60 @@ describe('from a work order', function () {
         expect(fn () => invoices($shop, fn (InvoiceService $service) => $service->createFromWorkOrder($done, invoiceInput(), pricesOf($shop, $done))))->toThrow(BusinessRuleViolation::class);
     });
 
+    it('lets staff rename, reprice, drop and add jobs, while parts keep their work order quantities', function () {
+        $shop = provisionTenant();
+        $mechanic = mechanicIn($shop);
+        $part = stockedPart($shop);
+        $workOrder = workOrderIn($shop);
+        $brakes = workOrders($shop, function (WorkOrderService $service) use ($workOrder, $mechanic, $part) {
+            $service->assignMechanics($workOrder, [$mechanic->id]);
+            $brakes = $service->addService($workOrder, ['description' => 'Ganti kampas rem', 'qty' => 1, 'unit_price' => 100_000, 'mechanic_id' => $mechanic->id]);
+            $service->addService($workOrder, ['description' => 'Cek umum', 'qty' => 1, 'unit_price' => 50_000]);
+            $service->addPart($workOrder, $part, 200, 50_000);
+            $service->changeStatus($workOrder, WorkOrderStatus::Completed);
+
+            return $brakes;
+        });
+        $partLine = inTenant($shop->tenant, $shop->branch, fn () => $workOrder->parts()->sole());
+
+        // "Cek umum" is not charged; "Spooring" and the towing are not on the work order.
+        $invoice = invoices($shop, fn (InvoiceService $service) => $service->createFromWorkOrder($workOrder, invoiceInput(), [
+            ['source' => 'service', 'id' => $brakes->id, 'type' => 'service', 'service_item_id' => null, 'description' => 'Ganti kampas rem depan + bersihkan', 'qty' => 100, 'unit_price' => 120_000],
+            ['source' => 'service', 'id' => null, 'type' => 'service', 'service_item_id' => null, 'description' => 'Spooring', 'qty' => 200, 'unit_price' => 75_000],
+            ['source' => 'service', 'id' => null, 'type' => 'other', 'description' => 'Biaya derek', 'qty' => 100, 'unit_price' => 150_000],
+            ['source' => 'part', 'id' => $partLine->id, 'qty' => 500, 'unit_price' => 55_000],
+        ]));
+
+        $lines = inTenant($shop->tenant, $shop->branch, fn () => InvoiceLine::query()->where('invoice_id', $invoice->id)->orderBy('sort')->get());
+        expect($lines->pluck('description')->all())->toBe(['Ganti kampas rem depan + bersihkan', 'Spooring', 'Biaya derek', $part->name])
+            ->and($lines[0]->mechanic_id)->toBe($mechanic->id)
+            ->and($lines[1]->mechanic_id)->toBeNull()
+            ->and($lines[2]->type->value)->toBe('other')
+            // The part keeps its work order quantity (2), only the price changed.
+            ->and($lines[3]->qty)->toBe('2.00')
+            ->and($invoice->subtotal)->toBe(120_000 + 150_000 + 150_000 + 110_000)
+            // The work order itself is the record of the work done and stays as it was.
+            ->and(inTenant($shop->tenant, $shop->branch, fn () => $workOrder->services()->orderBy('sort')->pluck('description')->all()))->toBe(['Ganti kampas rem', 'Cek umum']);
+    });
+
+    it('needs every work order part, and only jobs of this work order', function () {
+        $shop = provisionTenant();
+        $workOrder = completedWorkOrder($shop);
+        $other = completedWorkOrder($shop);
+        $otherJob = inTenant($shop->tenant, $shop->branch, fn () => $other->services()->value('id'));
+        $jobsOnly = array_values(array_filter(pricesOf($shop, $workOrder), fn ($line) => $line['source'] === 'service'));
+
+        expect(fn () => invoices($shop, fn (InvoiceService $service) => $service->createFromWorkOrder($workOrder, invoiceInput(), $jobsOnly)))->toThrow(BusinessRuleViolation::class)
+            ->and(fn () => invoices($shop, fn (InvoiceService $service) => $service->createFromWorkOrder($workOrder, invoiceInput(), [
+                ...pricesOf($shop, $workOrder),
+                ['source' => 'service', 'id' => $otherJob, 'unit_price' => 10_000],
+            ])))->toThrow(BusinessRuleViolation::class)
+            ->and(fn () => invoices($shop, fn (InvoiceService $service) => $service->createFromWorkOrder($workOrder, invoiceInput(), [
+                ...pricesOf($shop, $workOrder),
+                ['source' => 'service', 'id' => null, 'type' => 'service', 'description' => '  ', 'qty' => 100, 'unit_price' => 10_000],
+            ])))->toThrow(BusinessRuleViolation::class);
+    });
+
     it('sends the work order back to completed when its invoice is cancelled, so it can be invoiced again', function () {
         $shop = provisionTenant();
         $workOrder = completedWorkOrder($shop);
@@ -162,6 +217,28 @@ describe('HTTP', function () {
         // 200.000 − 20.000 = 180.000 + 11% (the branch setting still applies)
         expect($invoice->tax_enabled)->toBeTrue()
             ->and($invoice->total)->toBe(199_800);
+    });
+
+    it('accepts renamed and added jobs from the invoice form', function () {
+        $shop = provisionTenant();
+        $workOrder = completedWorkOrder($shop);
+        $job = inTenant($shop->tenant, $shop->branch, fn () => $workOrder->services()->value('id'));
+        $partLine = inTenant($shop->tenant, $shop->branch, fn () => $workOrder->parts()->value('id'));
+
+        $this->actingAs(userWithRole($shop, RoleName::FrontDesk))->post(route('invoices.store'), [
+            'mode' => 'work_order',
+            'work_order_id' => $workOrder->id,
+            'issue_date' => now('Asia/Jakarta')->toDateString(),
+            'lines' => [
+                ['source' => 'service', 'id' => $job, 'type' => 'service', 'service_item_id' => null, 'description' => 'Ganti kampas rem + cek minyak rem', 'qty' => '1', 'unit_price' => 110_000],
+                ['source' => 'service', 'id' => null, 'type' => 'service', 'service_item_id' => null, 'description' => 'Ganti lampu rem', 'qty' => '2', 'unit_price' => 15_000],
+                ['source' => 'part', 'id' => $partLine, 'unit_price' => 50_000],
+            ],
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $invoice = inTenant($shop->tenant, $shop->branch, fn () => Invoice::query()->with('lines')->sole());
+        expect($invoice->lines->pluck('description')->all())->toContain('Ganti kampas rem + cek minyak rem', 'Ganti lampu rem')
+            ->and($invoice->total)->toBe(110_000 + 30_000 + 100_000);
     });
 
     it('lets Finance turn tax off for one invoice', function () {

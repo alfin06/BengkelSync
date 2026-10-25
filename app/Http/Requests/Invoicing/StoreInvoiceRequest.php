@@ -15,8 +15,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * A new invoice: from a finished work order (prices and discounts per line), or a
- * walk-in sale (any lines, optional customer = "Pelanggan umum"). The server
+ * A new invoice: from a finished work order (jobs editable, parts with their work order
+ * quantities), or a walk-in sale (any lines, optional customer = "Pelanggan umum"). The server
  * recalculates every total; nothing computed by the browser is trusted.
  */
 class StoreInvoiceRequest extends FormRequest
@@ -46,15 +46,22 @@ class StoreInvoiceRequest extends FormRequest
             'lines' => ['required', 'array', 'min:1', 'max:100'],
             'lines.*.unit_price' => ['required', 'integer', 'min:0', 'max:999999999999'],
             'lines.*.discount_amount' => ['nullable', 'integer', 'min:0', 'max:999999999999'],
-            // From a work order: which line, quantities stay as on the work order.
-            'lines.*.source' => ['exclude_unless:mode,work_order', 'required', Rule::in(['service', 'part'])],
-            'lines.*.id' => ['exclude_unless:mode,work_order', 'required', 'integer'],
-            // Walk-in sale.
-            'lines.*.type' => ['exclude_unless:mode,walk_in', 'required', Rule::enum(InvoiceLineType::class)],
-            'lines.*.part_id' => ['exclude_unless:mode,walk_in', 'nullable', 'required_if:lines.*.type,part', 'integer'],
-            'lines.*.service_item_id' => ['exclude_unless:mode,walk_in', 'nullable', 'integer'],
-            'lines.*.description' => ['exclude_unless:mode,walk_in', 'nullable', 'required_unless:lines.*.type,part', 'string', 'max:255'],
-            'lines.*.qty' => ['exclude_unless:mode,walk_in', 'required', new StockQuantity],
+            'lines.*.service_item_id' => ['nullable', 'integer'],
+            ...($this->input('mode') === 'work_order' ? [
+                // From a work order: its parts by id (quantities stay as on the work order),
+                // and jobs or other charges typed freely, optionally based on a work order job.
+                'lines.*.source' => ['required', Rule::in(['service', 'part'])],
+                'lines.*.id' => ['nullable', 'required_if:lines.*.source,part', 'integer'],
+                'lines.*.type' => ['nullable', Rule::in([InvoiceLineType::Service->value, InvoiceLineType::Other->value])],
+                'lines.*.description' => ['nullable', 'string', 'max:255'],
+                'lines.*.qty' => ['nullable', new StockQuantity],
+            ] : [
+                // Walk-in sale.
+                'lines.*.type' => ['required', Rule::enum(InvoiceLineType::class)],
+                'lines.*.part_id' => ['nullable', 'required_if:lines.*.type,part', 'integer'],
+                'lines.*.description' => ['nullable', 'required_unless:lines.*.type,part', 'string', 'max:255'],
+                'lines.*.qty' => ['required', new StockQuantity],
+            ]),
         ];
     }
 
@@ -112,16 +119,37 @@ class StoreInvoiceRequest extends FormRequest
     }
 
     /**
-     * @return list<array{source: string, id: int, unit_price: int, discount_amount: int}>
+     * Lines of an invoice for a work order: its parts (source "part", with prices) and
+     * jobs or other charges (source "service"), see InvoiceService::createFromWorkOrder().
+     * Fields left out of a job are taken from its work order job.
+     *
+     * @return list<array{source: string, id?: int|null, type?: string|null, service_item_id?: int|null, description?: string|null, qty?: int|null, unit_price: int, discount_amount?: int}>
      */
-    public function workOrderPrices(): array
+    public function workOrderLines(): array
     {
-        return array_values(array_map(fn (array $line) => [
-            'source' => (string) $line['source'],
-            'id' => (int) $line['id'],
-            'unit_price' => (int) $line['unit_price'],
-            'discount_amount' => (int) ($line['discount_amount'] ?? 0),
-        ], (array) $this->input('lines', [])));
+        return array_values(array_map(function (array $line): array {
+            $row = [
+                'source' => (string) $line['source'],
+                'id' => isset($line['id']) ? (int) $line['id'] : null,
+                'unit_price' => (int) $line['unit_price'],
+                'discount_amount' => (int) ($line['discount_amount'] ?? 0),
+            ];
+
+            if (isset($line['type'])) {
+                $row['type'] = (string) $line['type'];
+            }
+            if (array_key_exists('service_item_id', $line)) {
+                $row['service_item_id'] = $line['service_item_id'] === null ? null : (int) $line['service_item_id'];
+            }
+            if (isset($line['description'])) {
+                $row['description'] = (string) $line['description'];
+            }
+            if (isset($line['qty'])) {
+                $row['qty'] = Quantity::parse((string) $line['qty']);
+            }
+
+            return $row;
+        }, (array) $this->input('lines', [])));
     }
 
     /**

@@ -65,7 +65,9 @@ Di halaman SPK:
 ### c. Membuat invoice
 
 1. Setelah SPK berstatus **Selesai**, tekan **Buat invoice**.
-2. Jasa dan part terisi otomatis dari SPK. Harga dan diskon masih bisa disesuaikan.
+2. Jasa dan part terisi otomatis dari SPK.
+   - **Jasa & biaya**: nama, jumlah, harga, dan diskon bisa diubah. Jasa yang tidak ditagih bisa dihapus, dan jasa yang tidak ada di Daftar jasa (atau **Biaya lain**) bisa ditambahkan. SPK sendiri tidak berubah.
+   - **Part dari SPK**: jumlahnya mengikuti SPK (stoknya sudah keluar); hanya harga dan diskon yang bisa diubah.
 3. Tekan **Simpan invoice**. Status SPK berubah menjadi **Ditagih**.
 4. Tekan **Cetak** untuk mencetak invoice (ukuran A5, cocok untuk kertas 2 ply).
 

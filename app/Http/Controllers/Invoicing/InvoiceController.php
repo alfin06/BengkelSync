@@ -78,9 +78,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices/Create', [
             'workOrder' => $workOrder === null ? null : $this->workOrderForInvoice($workOrder),
-            'catalog' => $workOrder === null
-                ? ServiceItem::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'default_price'])
-                : [],
+            'catalog' => ServiceItem::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'default_price']),
             'tax' => [
                 'enabled' => $branch->tax_enabled,
                 'name' => $branch->tax_name,
@@ -98,7 +96,7 @@ class InvoiceController extends Controller
     public function store(StoreInvoiceRequest $request): RedirectResponse
     {
         $invoice = $request->input('mode') === 'work_order'
-            ? $this->invoices->createFromWorkOrder($request->workOrder() ?? abort(404), $request->invoiceHeader(), $request->workOrderPrices())
+            ? $this->invoices->createFromWorkOrder($request->workOrder() ?? abort(404), $request->invoiceHeader(), $request->workOrderLines())
             : $this->invoices->createWalkIn($request->customer(), $request->invoiceHeader(), $request->walkInLines());
 
         return redirect()->route('invoices.show', $invoice)->with('success', __('invoices.created', ['number' => $invoice->number]));
@@ -201,6 +199,7 @@ class InvoiceController extends Controller
                 ...$workOrder->services->map(fn (WorkOrderServiceLine $line) => [
                     'source' => 'service',
                     'id' => $line->id,
+                    'service_item_id' => $line->service_item_id,
                     'description' => $line->description,
                     'qty' => (string) $line->qty,
                     'qty_label' => (string) $line->qty,
@@ -210,6 +209,7 @@ class InvoiceController extends Controller
                 ...$workOrder->parts->map(fn (WorkOrderPart $line) => [
                     'source' => 'part',
                     'id' => $line->id,
+                    'service_item_id' => null,
                     'description' => $line->part->name,
                     'qty' => rtrim(rtrim($line->qty, '0'), '.'),
                     'qty_label' => Quantity::format($line->qtyHundredths()),

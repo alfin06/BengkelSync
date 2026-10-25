@@ -27,10 +27,20 @@ interface PartResult {
 }
 
 /**
- * Invoice lines being typed (a counter sale, or an invoice being edited): parts (stock
- * follows when saved), services and other charges. Totals shown are a preview; the server calculates the real ones.
+ * Invoice lines being typed (a counter sale, an invoice being edited, or the jobs of a work
+ * order being invoiced): parts (stock follows when saved), services and other charges.
+ * Totals shown are a preview; the server calculates the real ones.
  */
-const props = defineProps<{ catalog: CatalogOption[]; canDiscount: boolean; errors: Partial<Record<string, string>> }>();
+const props = withDefaults(
+    defineProps<{
+        catalog: CatalogOption[];
+        canDiscount: boolean;
+        errors: Partial<Record<string, string>>;
+        /** false: only jobs and other charges (a work order's parts are listed separately) */
+        withParts?: boolean;
+    }>(),
+    { withParts: true },
+);
 const lines = defineModel<InvoiceLineInput[]>({ required: true });
 
 const key = (): string => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -150,7 +160,7 @@ const catalogOptions = props.catalog.map((item) => ({ value: item.id, label: `${
 
         <p v-if="errors.lines" class="text-sm font-medium text-destructive" role="alert">{{ errors.lines }}</p>
 
-        <div class="grid gap-2">
+        <div v-if="withParts" class="grid gap-2">
             <label for="invoice-part-search" class="text-sm font-medium">{{ $t('invoices.add_part') }}</label>
             <div class="relative">
                 <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />

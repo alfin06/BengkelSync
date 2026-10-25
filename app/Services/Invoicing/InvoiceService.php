@@ -16,7 +16,6 @@ use App\Models\Part;
 use App\Models\ServiceItem;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderPart;
-use App\Models\WorkOrderServiceLine;
 use App\Services\Audit\AuditLogger;
 use App\Services\Inventory\StockService;
 use App\Support\DocumentNumber;
@@ -67,15 +66,15 @@ class InvoiceService
     }
 
     /**
-     * Invoice a finished work order. Quantities come from the work order; prices and
-     * discounts may be adjusted for every line.
+     * Invoice a finished work order. Jobs may be renamed, repriced, left out or added;
+     * parts keep their work order quantities (see linesFromWorkOrder()).
      *
      * @param  array{issue_date: string, due_date?: string|null, notes?: string|null, discount_amount?: int, tax_enabled?: bool|null}  $header
-     * @param  list<array{source: string, id: int, unit_price: int, discount_amount?: int}>  $prices  one entry per work order line
+     * @param  list<array{source: string, id?: int|null, type?: string|null, service_item_id?: int|null, description?: string|null, qty?: int|null, unit_price: int, discount_amount?: int}>  $lines  qty in hundredths
      */
-    public function createFromWorkOrder(WorkOrder $workOrder, array $header, array $prices): Invoice
+    public function createFromWorkOrder(WorkOrder $workOrder, array $header, array $lines): Invoice
     {
-        return DB::transaction(function () use ($workOrder, $header, $prices): Invoice {
+        return DB::transaction(function () use ($workOrder, $header, $lines): Invoice {
             $locked = WorkOrder::query()->with(['services', 'parts.part'])->whereKey($workOrder->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->status !== WorkOrderStatus::Completed) {
@@ -86,8 +85,7 @@ class InvoiceService
                 throw new BusinessRuleViolation(__('invoices.work_order_invoiced'));
             }
 
-            $lines = $this->linesFromWorkOrder($locked, $prices);
-            $invoice = $this->store($header, $lines, $locked->customer_id, $locked->id);
+            $invoice = $this->store($header, $this->linesFromWorkOrder($locked, $lines), $locked->customer_id, $locked->id);
 
             $locked->forceFill(['status' => $invoice->status === InvoiceStatus::Paid ? WorkOrderStatus::Closed : WorkOrderStatus::Invoiced])->save();
 
@@ -378,50 +376,82 @@ class InvoiceService
     }
 
     /**
-     * Every line of the work order exactly once, with the price and discount chosen.
+     * The lines of an invoice for a work order.
      *
-     * @param  list<array{source: string, id: int, unit_price: int, discount_amount?: int}>  $prices
+     * Jobs (source "service") are free: staff may rename them, change quantity and price,
+     * leave some out, or add jobs and other charges that are not on the work order. A job
+     * with the id of a work order service line keeps that line's mechanic and catalog link;
+     * without a description or quantity it takes them from the work order.
+     *
+     * Parts (source "part") must all be there exactly once with their work order quantity:
+     * they already left the stock with the work order. Only price and discount may change.
+     *
+     * @param  list<array{source: string, id?: int|null, type?: string|null, service_item_id?: int|null, description?: string|null, qty?: int|null, unit_price: int, discount_amount?: int}>  $input  qty in hundredths
      * @return list<array{type: InvoiceLineType, part: Part|null, part_id: int|null, service_item_id: int|null, description: string, qty: int, unit_price: int, unit_cost: int|null, discount_amount: int, line_total: int, mechanic_id: int|null}>
      */
-    private function linesFromWorkOrder(WorkOrder $workOrder, array $prices): array
+    private function linesFromWorkOrder(WorkOrder $workOrder, array $input): array
     {
-        $chosen = [];
-        foreach ($prices as $price) {
-            $chosen[$price['source'].':'.$price['id']] = $price;
-        }
+        $services = $workOrder->services->keyBy('id');
+        $jobs = [];
+        $existing = [];
+        $fromWorkOrder = [];
+        $partPrices = [];
 
-        $expected = [
-            ...$workOrder->services->map(fn (WorkOrderServiceLine $line) => 'service:'.$line->id)->all(),
-            ...$workOrder->parts->map(fn (WorkOrderPart $line) => 'part:'.$line->id)->all(),
-        ];
+        foreach ($input as $row) {
+            if ($row['source'] === 'part') {
+                $partPrices[(int) ($row['id'] ?? 0)] = $row;
 
-        if ($expected === [] || count($chosen) !== count($prices) || array_diff($expected, array_keys($chosen)) !== [] || array_diff(array_keys($chosen), $expected) !== []) {
-            throw new BusinessRuleViolation(__('invoices.work_order_changed'));
-        }
+                continue;
+            }
 
-        $lines = [];
+            $service = isset($row['id']) ? $services->get((int) $row['id']) : null;
+            if (isset($row['id']) && ($service === null || isset($fromWorkOrder[$service->id]))) {
+                throw new BusinessRuleViolation(__('invoices.work_order_changed'));
+            }
 
-        foreach ($workOrder->services as $service) {
-            $price = $chosen['service:'.$service->id];
-            $qty = $service->qty * Quantity::SCALE;
-            $discount = $price['discount_amount'] ?? 0;
-            $lines[] = [
-                'type' => InvoiceLineType::Service,
-                'part' => null,
-                'part_id' => null,
-                'service_item_id' => $service->service_item_id,
-                'description' => $service->description,
-                'qty' => $qty,
-                'unit_price' => $price['unit_price'],
-                'unit_cost' => null,
-                'discount_amount' => $discount,
-                'line_total' => InvoiceCalculator::lineTotal($qty, $price['unit_price'], $discount),
-                'mechanic_id' => $service->mechanic_id,
+            $key = count($jobs);
+            if ($service !== null) {
+                // An unsaved line standing for the work order job, so the shared checks keep
+                // its mechanic and accept its catalog item even if that was deactivated since.
+                $fromWorkOrder[$service->id] = true;
+                $existing[$key] = new InvoiceLine([
+                    'type' => InvoiceLineType::Service,
+                    'service_item_id' => $service->service_item_id,
+                    'mechanic_id' => $service->mechanic_id,
+                ]);
+            }
+
+            $jobs[] = [
+                'id' => $service === null ? null : $key,
+                'type' => $row['type'] ?? InvoiceLineType::Service->value,
+                'service_item_id' => array_key_exists('service_item_id', $row) ? $row['service_item_id'] : $service?->service_item_id,
+                'description' => $row['description'] ?? $service?->description,
+                'qty' => $row['qty'] ?? ($service === null ? 0 : $service->qty * Quantity::SCALE),
+                'unit_price' => $row['unit_price'],
+                'discount_amount' => $row['discount_amount'] ?? 0,
             ];
         }
 
+        $partIds = $workOrder->parts->map(fn (WorkOrderPart $line) => $line->id)->all();
+        $given = array_keys($partPrices);
+        sort($partIds);
+        sort($given);
+        if ($partIds !== $given || count($partPrices) !== count(array_filter($input, fn (array $row) => $row['source'] === 'part'))) {
+            throw new BusinessRuleViolation(__('invoices.work_order_changed'));
+        }
+
+        if ($jobs === [] && $partIds === []) {
+            throw new BusinessRuleViolation(__('invoices.no_lines'));
+        }
+
+        if (array_filter($jobs, fn (array $job) => $job['type'] === InvoiceLineType::Part->value) !== []) {
+            throw new BusinessRuleViolation(__('invoices.work_order_changed'));
+        }
+
+        $lines = $this->walkInLines($jobs, $existing);
+
         foreach ($workOrder->parts as $partLine) {
-            $price = $chosen['part:'.$partLine->id];
+            $price = $partPrices[$partLine->id];
             $discount = $price['discount_amount'] ?? 0;
             $lines[] = [
                 'type' => InvoiceLineType::Part,

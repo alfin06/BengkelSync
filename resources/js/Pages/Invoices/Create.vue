@@ -28,11 +28,33 @@ const props = defineProps<{
     can: { discount: boolean; toggleTax: boolean };
 }>();
 
-// From a work order: quantities are fixed, prices and discounts can be adjusted.
+// From a work order, jobs can be renamed, repriced, removed or added (they start as the
+// work order's jobs); parts keep their work order quantities, only price and discount change.
+// A walk-in sale uses the same editor for every line.
+const jobs = ref<InvoiceLineInput[]>(
+    (props.workOrder?.lines ?? [])
+        .filter((line) => line.source === 'service')
+        .map((line) => ({
+            key: `service-${line.id}`,
+            work_order_service_id: line.id,
+            type: 'service',
+            part_id: null,
+            service_item_id: line.service_item_id,
+            description: line.description,
+            unit_label: null,
+            allows_decimals: false,
+            available: null,
+            qty: line.qty,
+            unit_price: line.unit_price,
+            discount_amount: null,
+        })),
+);
 const priced = ref(
-    (props.workOrder?.lines ?? []).map((line) => ({ ...line, price: line.unit_price as number | null, discount: null as number | null })),
+    (props.workOrder?.lines ?? []).filter((line) => line.source === 'part').map((line) => ({ ...line, price: line.unit_price as number | null, discount: null as number | null })),
 );
 const walkIn = ref<InvoiceLineInput[]>([]);
+const editorLines = computed(() => (props.workOrder ? jobs.value : walkIn.value));
+const jobTotal = (line: InvoiceLineInput): number => Math.max(linePrice(line.qty, line.unit_price) - (line.discount_amount ?? 0), 0);
 const customerMode = ref<'general' | 'customer'>('general');
 
 const form = useForm({
@@ -44,15 +66,12 @@ const form = useForm({
     notes: '',
 });
 
-const lineTotals = computed(() =>
-    props.workOrder
-        ? priced.value.map((line) => Math.max(linePrice(line.qty, line.price) - (line.discount ?? 0), 0))
-        : walkIn.value.map((line) => Math.max(linePrice(line.qty, line.unit_price) - (line.discount_amount ?? 0), 0)),
-);
+const partTotals = computed(() => priced.value.map((line) => Math.max(linePrice(line.qty, line.price) - (line.discount ?? 0), 0)));
+const lineTotals = computed(() => [...editorLines.value.map(jobTotal), ...(props.workOrder ? partTotals.value : [])]);
 const taxOn = computed(() => (props.can.toggleTax ? form.tax_enabled : props.tax.enabled));
 const totals = computed(() => invoiceTotals(lineTotals.value, form.discount_amount ?? 0, taxOn.value, props.tax.rate, props.tax.inclusive));
 const taxRateLabel = computed(() => `${Number(props.tax.rate)}%`);
-const hasLines = computed(() => (props.workOrder ? priced.value.length : walkIn.value.length) > 0);
+const hasLines = computed(() => lineTotals.value.length > 0);
 
 function submit(): void {
     form.transform((data) => ({
@@ -64,8 +83,21 @@ function submit(): void {
         notes: data.notes,
         discount_amount: data.discount_amount ?? 0,
         tax_enabled: props.can.toggleTax ? data.tax_enabled : null,
+        // Jobs first, then parts: error keys (lines.N.field) follow this order.
         lines: props.workOrder
-            ? priced.value.map((line) => ({ source: line.source, id: line.id, unit_price: line.price, discount_amount: line.discount ?? 0 }))
+            ? [
+                  ...jobs.value.map((line) => ({
+                      source: 'service',
+                      id: line.work_order_service_id ?? null,
+                      type: line.type,
+                      service_item_id: line.service_item_id,
+                      description: line.description,
+                      qty: line.qty,
+                      unit_price: line.unit_price,
+                      discount_amount: line.discount_amount ?? 0,
+                  })),
+                  ...priced.value.map((line) => ({ source: line.source, id: line.id, unit_price: line.price, discount_amount: line.discount ?? 0 })),
+              ]
             : walkIn.value.map((line) => ({
                   type: line.type,
                   part_id: line.part_id,
@@ -80,7 +112,8 @@ function submit(): void {
 }
 
 const errors = computed(() => form.errors as Partial<Record<string, string>>);
-const error = (index: number, field: string): string | undefined => errors.value[`lines.${index}.${field}`];
+// Part rows come after the jobs in the submitted lines.
+const partError = (index: number, field: string): string | undefined => errors.value[`lines.${jobs.value.length + index}.${field}`];
 </script>
 
 <template>
@@ -115,8 +148,18 @@ const error = (index: number, field: string): string | undefined => errors.value
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader><CardTitle>{{ $t('invoices.lines') }}</CardTitle></CardHeader>
+            <Card v-if="workOrder">
+                <CardHeader>
+                    <CardTitle>{{ $t('invoices.jobs_title') }}</CardTitle>
+                    <p class="text-sm text-muted-foreground">{{ $t('invoices.jobs_hint') }}</p>
+                </CardHeader>
+                <CardContent>
+                    <InvoiceLinesEditor v-model="jobs" :catalog="catalog" :can-discount="can.discount" :errors="errors" :with-parts="false" />
+                </CardContent>
+            </Card>
+
+            <Card v-if="!workOrder || priced.length">
+                <CardHeader><CardTitle>{{ workOrder ? $t('invoices.parts_title') : $t('invoices.lines') }}</CardTitle></CardHeader>
                 <CardContent>
                     <ol v-if="workOrder" class="grid gap-3">
                         <li v-for="(line, index) in priced" :key="`${line.source}-${line.id}`" class="rounded-md border p-3">
@@ -125,17 +168,17 @@ const error = (index: number, field: string): string | undefined => errors.value
                                 <span class="font-normal text-muted-foreground"> · {{ line.qty_label }} {{ line.unit_label ?? '' }}</span>
                             </p>
                             <div :class="cn('grid gap-3', can.discount ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2')">
-                                <FormField :id="`price-${index}`" :label="$t('invoices.fields.unit_price')" :error="error(index, 'unit_price')" required>
+                                <FormField :id="`price-${index}`" :label="$t('invoices.fields.unit_price')" :error="partError(index, 'unit_price')" required>
                                     <template #default="{ invalid, describedBy }">
                                         <MoneyInput :id="`price-${index}`" v-model="line.price" :invalid="invalid" :aria-describedby="describedBy" />
                                     </template>
                                 </FormField>
-                                <FormField v-if="can.discount" :id="`discount-${index}`" :label="$t('invoices.fields.discount')" :error="error(index, 'discount_amount')">
+                                <FormField v-if="can.discount" :id="`discount-${index}`" :label="$t('invoices.fields.discount')" :error="partError(index, 'discount_amount')">
                                     <template #default="{ invalid, describedBy }">
                                         <MoneyInput :id="`discount-${index}`" v-model="line.discount" :invalid="invalid" :aria-describedby="describedBy" />
                                     </template>
                                 </FormField>
-                                <p class="self-end pb-2 text-right text-sm font-semibold tabular-nums">{{ formatRupiah(lineTotals[index]) }}</p>
+                                <p class="self-end pb-2 text-right text-sm font-semibold tabular-nums">{{ formatRupiah(partTotals[index]) }}</p>
                             </div>
                         </li>
                     </ol>

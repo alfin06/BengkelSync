@@ -65,6 +65,8 @@ export interface TaxSetting {
 export interface WorkOrderInvoiceLine {
     source: 'service' | 'part';
     id: number;
+    /** Catalog job the work order line came from (services only) */
+    service_item_id: number | null;
     description: string;
     qty: string;
     qty_label: string;
@@ -77,6 +79,8 @@ export interface InvoiceLineInput {
     key: string;
     /** Existing line of the invoice being edited (keeps its cost and mechanic) */
     id?: number | null;
+    /** Work order job this line is based on, when invoicing a work order (keeps its mechanic) */
+    work_order_service_id?: number | null;
     type: 'service' | 'part' | 'other';
     part_id: number | null;
     service_item_id: number | null;
