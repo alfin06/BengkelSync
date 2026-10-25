@@ -74,6 +74,8 @@ class InvoiceResource extends JsonResource
                 'service_item_id' => $line->service_item_id,
                 'allows_decimals' => $line->part?->unit->allowsDecimals() ?? false,
                 'description' => $line->description,
+                // The stock item behind a part line (its invoice name may differ).
+                'part_name' => $line->part?->name,
                 // "4.2" for inputs, "4,2" for display.
                 'qty' => rtrim(rtrim($line->qty, '0'), '.'),
                 'unit_price' => $line->unit_price,

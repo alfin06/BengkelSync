@@ -67,11 +67,13 @@ Di halaman SPK:
 1. Setelah SPK berstatus **Selesai**, tekan **Buat invoice**.
 2. Jasa dan part terisi otomatis dari SPK.
    - **Jasa & biaya**: nama, jumlah, harga, dan diskon bisa diubah. Jasa yang tidak ditagih bisa dihapus, dan jasa yang tidak ada di Daftar jasa (atau **Biaya lain**) bisa ditambahkan. SPK sendiri tidak berubah.
-   - **Part dari SPK**: jumlahnya mengikuti SPK (stoknya sudah keluar); hanya harga dan diskon yang bisa diubah.
+   - **Part dari SPK**: jumlahnya mengikuti SPK (stoknya sudah keluar); **Nama di invoice**, harga, dan diskon bisa diubah.
 3. Tekan **Simpan invoice**. Status SPK berubah menjadi **Ditagih**.
 4. Tekan **Cetak** untuk mencetak invoice (ukuran A5, cocok untuk kertas 2 ply).
 
 **Penjualan langsung** (tanpa SPK, misalnya beli oli atau aki): buka **Invoice** → **Penjualan langsung**. Untuk pembeli yang tidak perlu dicatat, pilih **Pelanggan umum**. Stok barang langsung berkurang.
+
+**Nama part di invoice**: setiap part di invoice punya kolom **Nama di invoice** yang boleh diubah (mis. "Aki kering 45Ah (garansi 1 tahun)"). Stok tetap mengikuti barang aslinya, yang tetap terlihat di atas kolom itu. Kosongkan untuk memakai nama barang.
 
 ### d. Menerima pembayaran
 

@@ -131,6 +131,21 @@ describe('from a work order', function () {
             ->and(inTenant($shop->tenant, $shop->branch, fn () => $workOrder->services()->orderBy('sort')->pluck('description')->all()))->toBe(['Ganti kampas rem', 'Cek umum']);
     });
 
+    it('lets staff rename a work order part on the invoice', function () {
+        $shop = provisionTenant();
+        $workOrder = completedWorkOrder($shop);
+        $lines = array_map(
+            fn (array $line) => $line['source'] === 'part' ? [...$line, 'description' => 'Kampas rem depan (original)'] : $line,
+            pricesOf($shop, $workOrder),
+        );
+
+        $invoice = invoices($shop, fn (InvoiceService $service) => $service->createFromWorkOrder($workOrder, invoiceInput(), $lines));
+
+        $part = inTenant($shop->tenant, $shop->branch, fn () => InvoiceLine::query()->where('invoice_id', $invoice->id)->where('type', 'part')->sole());
+        expect($part->description)->toBe('Kampas rem depan (original)')
+            ->and($part->qty)->toBe('2.00');
+    });
+
     it('needs every work order part, and only jobs of this work order', function () {
         $shop = provisionTenant();
         $workOrder = completedWorkOrder($shop);
@@ -183,6 +198,22 @@ describe('walk-in sale', function () {
         invoices($shop, fn (InvoiceService $service) => $service->void($invoice, 'Batal beli'));
 
         expect(inTenant($shop->tenant, $shop->branch, fn () => app(StockService::class)->available($oil)))->toBe(2000);
+    });
+
+    it('prints the name staff typed for a part, while the stock follows the part itself', function () {
+        $shop = provisionTenant();
+        $oil = stockedPart($shop, 2000, ['unit' => 'liter', 'name' => 'Oli mesin']);
+        $filter = stockedPart($shop, 1000, ['name' => 'Filter oli Avanza']);
+
+        $invoice = invoices($shop, fn (InvoiceService $service) => $service->createWalkIn(null, invoiceInput(), [
+            ['type' => 'part', 'part_id' => $oil->id, 'description' => 'Shell Helix HX7 10W-40 (curah)', 'qty' => 400, 'unit_price' => 80_000],
+            ['type' => 'part', 'part_id' => $filter->id, 'description' => '  ', 'qty' => 100, 'unit_price' => 40_000],
+        ]));
+
+        $lines = inTenant($shop->tenant, $shop->branch, fn () => InvoiceLine::query()->where('invoice_id', $invoice->id)->orderBy('sort')->get());
+        expect($lines->pluck('description')->all())->toBe(['Shell Helix HX7 10W-40 (curah)', 'Filter oli Avanza'])
+            ->and($lines[0]->part_id)->toBe($oil->id)
+            ->and(inTenant($shop->tenant, $shop->branch, fn () => app(StockService::class)->available($oil)))->toBe(1600);
     });
 
     it('refuses parts that are not in stock, and saves nothing then', function () {

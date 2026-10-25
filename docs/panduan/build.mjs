@@ -84,7 +84,12 @@ async function launch() {
             socket.close();
             edge.kill();
             await sleep(500);
-            rmSync(profile, { recursive: true, force: true });
+            // Edge may still hold a file for a moment; a leftover temp profile is harmless.
+            try {
+                rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
+            } catch {
+                console.warn(`Could not remove the temporary Edge profile ${profile}`);
+            }
         },
     };
 }

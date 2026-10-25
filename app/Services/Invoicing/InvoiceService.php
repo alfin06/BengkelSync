@@ -384,7 +384,8 @@ class InvoiceService
      * without a description or quantity it takes them from the work order.
      *
      * Parts (source "part") must all be there exactly once with their work order quantity:
-     * they already left the stock with the work order. Only price and discount may change.
+     * they already left the stock with the work order. Name on the invoice, price and
+     * discount may change.
      *
      * @param  list<array{source: string, id?: int|null, type?: string|null, service_item_id?: int|null, description?: string|null, qty?: int|null, unit_price: int, discount_amount?: int}>  $input  qty in hundredths
      * @return list<array{type: InvoiceLineType, part: Part|null, part_id: int|null, service_item_id: int|null, description: string, qty: int, unit_price: int, unit_cost: int|null, discount_amount: int, line_total: int, mechanic_id: int|null}>
@@ -453,12 +454,13 @@ class InvoiceService
         foreach ($workOrder->parts as $partLine) {
             $price = $partPrices[$partLine->id];
             $discount = $price['discount_amount'] ?? 0;
+            $name = trim((string) ($price['description'] ?? ''));
             $lines[] = [
                 'type' => InvoiceLineType::Part,
                 'part' => null, // already taken from the stock by the work order
                 'part_id' => $partLine->part_id,
                 'service_item_id' => null,
-                'description' => $partLine->part->name,
+                'description' => $name === '' ? $partLine->part->name : $name,
                 'qty' => $partLine->qtyHundredths(),
                 'unit_price' => $price['unit_price'],
                 'unit_cost' => $partLine->unit_cost,
@@ -513,7 +515,11 @@ class InvoiceService
                 throw new BusinessRuleViolation(__('work_orders.service_unavailable'));
             }
 
-            $description = $part !== null ? $part->name : trim((string) ($row['description'] ?? ''));
+            // The name printed on the invoice: staff may rename a part line; empty = the part's name.
+            $description = trim((string) ($row['description'] ?? ''));
+            if ($description === '' && $part !== null) {
+                $description = $part->name;
+            }
             if ($description === '') {
                 throw new BusinessRuleViolation(__('invoices.description_required'));
             }

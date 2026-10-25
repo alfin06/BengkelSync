@@ -38,6 +38,7 @@ const lines = ref<InvoiceLineInput[]>(
         part_id: line.part_id,
         service_item_id: line.service_item_id,
         description: line.description,
+        part_name: line.part_name,
         unit_label: line.unit_label,
         allows_decimals: line.allows_decimals,
         available: null,

@@ -50,7 +50,9 @@ const jobs = ref<InvoiceLineInput[]>(
         })),
 );
 const priced = ref(
-    (props.workOrder?.lines ?? []).filter((line) => line.source === 'part').map((line) => ({ ...line, price: line.unit_price as number | null, discount: null as number | null })),
+    (props.workOrder?.lines ?? [])
+        .filter((line) => line.source === 'part')
+        .map((line) => ({ ...line, name: line.description, price: line.unit_price as number | null, discount: null as number | null })),
 );
 const walkIn = ref<InvoiceLineInput[]>([]);
 const editorLines = computed(() => (props.workOrder ? jobs.value : walkIn.value));
@@ -96,7 +98,7 @@ function submit(): void {
                       unit_price: line.unit_price,
                       discount_amount: line.discount_amount ?? 0,
                   })),
-                  ...priced.value.map((line) => ({ source: line.source, id: line.id, unit_price: line.price, discount_amount: line.discount ?? 0 })),
+                  ...priced.value.map((line) => ({ source: line.source, id: line.id, description: line.name, unit_price: line.price, discount_amount: line.discount ?? 0 })),
               ]
             : walkIn.value.map((line) => ({
                   type: line.type,
@@ -167,6 +169,11 @@ const partError = (index: number, field: string): string | undefined => errors.v
                                 {{ line.description }}
                                 <span class="font-normal text-muted-foreground"> · {{ line.qty_label }} {{ line.unit_label ?? '' }}</span>
                             </p>
+                            <FormField :id="`part-name-${index}`" class="mb-3" :label="$t('invoices.fields.name_on_invoice')" :hint="$t('invoices.part_name_hint')" :error="partError(index, 'description')">
+                                <template #default="{ invalid, describedBy }">
+                                    <Input :id="`part-name-${index}`" v-model="line.name" autocomplete="off" :invalid="invalid" :aria-describedby="describedBy" />
+                                </template>
+                            </FormField>
                             <div :class="cn('grid gap-3', can.discount ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2')">
                                 <FormField :id="`price-${index}`" :label="$t('invoices.fields.unit_price')" :error="partError(index, 'unit_price')" required>
                                     <template #default="{ invalid, describedBy }">

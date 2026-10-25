@@ -75,6 +75,7 @@ function addPart(part: PartResult): void {
             part_id: part.id,
             service_item_id: null,
             description: part.name,
+            part_name: part.name,
             unit_label: part.unit_label,
             allows_decimals: part.allows_decimals,
             available: part.available,
@@ -119,7 +120,7 @@ const catalogOptions = props.catalog.map((item) => ({ value: item.id, label: `${
                 <div class="mb-3 flex items-start gap-2">
                     <component :is="line.type === 'part' ? Package : Wrench" class="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                     <span class="min-w-0 flex-1 text-sm font-medium">
-                        {{ line.type === 'part' ? line.description : $t(`invoices.line_type.${line.type}`) }}
+                        {{ line.type === 'part' ? (line.part_name ?? line.description) : $t(`invoices.line_type.${line.type}`) }}
                     </span>
                     <Button type="button" variant="ghost" size="icon" :aria-label="$t('invoices.remove_line')" @click="remove(index)"><Trash2 aria-hidden="true" /></Button>
                 </div>
@@ -128,7 +129,13 @@ const catalogOptions = props.catalog.map((item) => ({ value: item.id, label: `${
                     <FormField v-if="line.type === 'service' && catalog.length" :id="`line-${index}-catalog`" :label="$t('work_orders.from_catalog')">
                         <Select :id="`line-${index}-catalog`" :model-value="line.service_item_id" :options="catalogOptions" :placeholder="$t('common.choose')" @update:model-value="(value) => pickCatalog(line, value)" />
                     </FormField>
-                    <FormField v-if="line.type !== 'part'" :id="`line-${index}-description`" :label="$t('invoices.fields.description')" :error="error(index, 'description')" required>
+                    <FormField
+                        :id="`line-${index}-description`"
+                        :label="line.type === 'part' ? $t('invoices.fields.name_on_invoice') : $t('invoices.fields.description')"
+                        :hint="line.type === 'part' ? $t('invoices.part_name_hint') : undefined"
+                        :error="error(index, 'description')"
+                        :required="line.type !== 'part'"
+                    >
                         <template #default="{ invalid, describedBy }">
                             <Input :id="`line-${index}-description`" v-model="line.description" autocomplete="off" :invalid="invalid" :aria-describedby="describedBy" />
                         </template>

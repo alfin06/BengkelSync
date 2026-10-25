@@ -6,7 +6,10 @@ export interface InvoiceLine {
     part_id: number | null;
     service_item_id: number | null;
     allows_decimals: boolean;
+    /** Name printed on the invoice */
     description: string;
+    /** Stock item behind a part line; the invoice name may differ */
+    part_name: string | null;
     /** Plain value for inputs, e.g. "4.2" */
     qty: string;
     unit_price: number;
@@ -84,7 +87,10 @@ export interface InvoiceLineInput {
     type: 'service' | 'part' | 'other';
     part_id: number | null;
     service_item_id: number | null;
+    /** Name printed on the invoice (a part line can be renamed) */
     description: string;
+    /** Stock item behind a part line, shown under its invoice name */
+    part_name?: string | null;
     unit_label: string | null;
     allows_decimals: boolean;
     /** Hundredths on the shelf (parts) */

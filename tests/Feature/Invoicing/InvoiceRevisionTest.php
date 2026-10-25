@@ -69,6 +69,19 @@ function payCash(ProvisionedTenant $shop, Invoice $invoice, int $amount): void
 }
 
 describe('revise', function () {
+    it('renames a part line without touching the stock', function () {
+        $shop = provisionTenant();
+        [$invoice, $part] = counterSale($shop);
+        $before = shelf($shop, $part);
+        $lines = linesOf($shop, $invoice);
+        $lines[0]['description'] = 'Aki kering 45Ah (garansi 1 tahun)';
+
+        invoices($shop, fn (InvoiceService $service) => $service->revise($invoice, [], $lines, 'Nama barang di nota'));
+
+        expect(inTenant($shop->tenant, $shop->branch, fn () => $invoice->lines()->sole()->description))->toBe('Aki kering 45Ah (garansi 1 tahun)')
+            ->and(shelf($shop, $part))->toBe($before);
+    });
+
     it('saves the previous version, moves stock by the difference and recalculates', function () {
         $shop = provisionTenant();
         [$invoice, $part] = counterSale($shop);
