@@ -11,14 +11,14 @@ Status on 2026-10-24. Written for the review before pushing to `main`, and as th
 | Pilot shop | Bengkel Kalimas Lumas (not live; no production data) |
 | Tests | 425 Pest tests, 2.098 assertions, all passing (`php artisan test --parallel`) |
 | Checks | PHPStan level 6 clean, Pint clean, `vue-tsc` clean, `npm run build` passes |
-| Pushed to GitHub | **Nothing from Phase 0 onwards.** Only the rewritten `main` (history without the old DB dump) and, by accident, an early copy of `phase-1-purchases` |
+| Pushed to GitHub | **Nothing from Phase 0 onwards.** Only the rewritten `main` (history without the old DB dump) |
 | Size | 603 files changed against `main` (+42.447 / −14.693 lines) |
 
 ## 2. How to review
 
 ### Branches
 
-Every module is its own commit on its own branch, and each branch is stacked on the previous one. **The last branch, `phase-2-settings`, contains everything.** Reviewing that one branch against `main` is enough.
+Every module is its own commit, stacked on the previous one. **All of it is on one branch, `pilot-mvp`** (renamed from `phase-2-settings` on 2026-10-26, when the per-module branches were deleted; the chain below shows the commits they pointed to). Reviewing `pilot-mvp` against `main` is enough.
 
 ```
 main
@@ -42,7 +42,7 @@ main
                                                    └─ 2930e9b  shop settings (phase-2-settings)
 ```
 
-A sensible way to merge after review: fast-forward `main` to `phase-2-settings` (one push), then delete the intermediate branches. The `tailwind-4` branch (in a separate worktree) is an unrelated experiment and is not part of this chain.
+A sensible way to merge after review: fast-forward `main` to `pilot-mvp` (one push). Later commits on `pilot-mvp` (after the chain above) add the user guide, logo, branch management, searchable dropdowns and editable invoice lines.
 
 ### Running it locally
 
