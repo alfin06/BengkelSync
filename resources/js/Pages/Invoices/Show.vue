@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Ban, Banknote, History, Lock, Pencil, Printer } from 'lucide-vue-next';
+import { Ban, Banknote, History, Lock, MessageCircle, Pencil, Printer } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InvoiceStatusBadge from '@/Components/Invoices/InvoiceStatusBadge.vue';
+import WhatsAppDialog from '@/Components/Invoices/WhatsAppDialog.vue';
 import CheckoutDialog from '@/Components/Payments/CheckoutDialog.vue';
 import { Button, buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -21,10 +22,21 @@ const props = defineProps<{
     /** Older than the shop's lock period */
     locked: boolean;
     suggestedDueDate: string;
+    /** Ready WhatsApp messages; null for a cancelled invoice */
+    share: { phone: string | null; invoice_message: string; receipt_messages: Record<number, string> } | null;
     can: { void: boolean; update: boolean; pay: boolean; voidPayment: boolean };
 }>();
 
 const payOpen = ref(false);
+
+// "Kirim WA" for the invoice or for one kwitansi.
+const waOpen = ref(false);
+const waMessage = ref('');
+
+function sendWhatsApp(message: string): void {
+    waMessage.value = message;
+    waOpen.value = true;
+}
 
 // Cancelling one line or a whole kwitansi (Finance, with a reason). Nothing is deleted.
 const lineToVoid = ref<ReceiptLine | null>(null);
@@ -82,6 +94,9 @@ function voidInvoice(reason: string | null): void {
                 <a :href="route('invoices.print', invoice.id)" target="_blank" rel="noopener" :class="buttonVariants({ variant: 'outline' })">
                     <Printer aria-hidden="true" /> {{ $t('invoices.print') }}
                 </a>
+                <Button v-if="share" variant="outline" @click="sendWhatsApp(share.invoice_message)">
+                    <MessageCircle aria-hidden="true" /> {{ $t('whatsapp.send') }}
+                </Button>
                 <Button v-if="can.void" variant="outline" class="text-destructive" @click="voidOpen = true">
                     <Ban aria-hidden="true" /> {{ $t('invoices.void') }}
                 </Button>
@@ -173,6 +188,9 @@ function voidInvoice(reason: string | null): void {
                             <a :href="route('receipts.print', receipt.id)" target="_blank" rel="noopener" :class="buttonVariants({ variant: 'ghost', size: 'sm' })">
                                 <Printer aria-hidden="true" /> {{ $t('payments.print') }}
                             </a>
+                            <Button v-if="share?.receipt_messages[receipt.id]" variant="ghost" size="sm" @click="sendWhatsApp(share?.receipt_messages[receipt.id] ?? '')">
+                                <MessageCircle aria-hidden="true" /> {{ $t('whatsapp.send') }}
+                            </Button>
                             <Button v-if="can.voidPayment && !receipt.fully_voided" variant="ghost" size="sm" class="text-destructive" @click="askVoidReceipt(receipt)">
                                 {{ $t('payments.void_receipt') }}
                             </Button>
@@ -227,5 +245,7 @@ function voidInvoice(reason: string | null): void {
             :processing="voiding"
             @confirm="voidInvoice"
         />
+
+        <WhatsAppDialog v-if="share" v-model:open="waOpen" :phone="share.phone" :message="waMessage" />
     </AppLayout>
 </template>

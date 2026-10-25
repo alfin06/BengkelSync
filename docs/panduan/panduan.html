@@ -137,10 +137,10 @@
         <a href="#layar"><b>2. Mengenal layar</b><small>Menu, Beranda, pilihan yang bisa diketik</small></a>
         <a href="#spk"><b>3. Kendaraan masuk dan SPK</b><small>Buat SPK, jasa, part, status</small></a>
         <a href="#invoice"><b>4. Invoice</b><small>Dari SPK, penjualan langsung, memperbaiki</small></a>
-        <a href="#bayar"><b>5. Pembayaran pelanggan</b><small>Beberapa metode, cicilan, kwitansi, piutang</small></a>
+        <a href="#bayar"><b>5. Pembayaran pelanggan</b><small>Beberapa metode, cicilan, kwitansi, piutang, kirim WA</small></a>
         <a href="#pembelian"><b>6. Pembelian dan hutang supplier</b><small>Barang masuk, bayar supplier</small></a>
         <a href="#stok"><b>7. Stok dan suku cadang</b><small>Barang, koreksi stok, stok menipis</small></a>
-        <a href="#kas"><b>8. Kas dan pengeluaran</b><small>Saldo, transfer, hitung kas, nota</small></a>
+        <a href="#kas"><b>8. Kas dan pengeluaran</b><small>Saldo, transfer, hitung kas, nota, rekap harian</small></a>
         <a href="#data"><b>9. Pelanggan, kendaraan, jasa, mekanik</b><small>Data dasar bengkel</small></a>
         <a href="#pemilik"><b>10. Pengaturan bengkel</b><small>Toko & cabang, pajak, kunci invoice</small></a>
         <a href="#pengguna"><b>11. Pengguna dan hak akses</b><small>Akun staf, peran, matriks akses</small></a>
@@ -163,12 +163,12 @@
         <div class="role">
             <div class="role-title">Admin Depan <small>· kasir dan penerima kendaraan</small></div>
             <p>Menerima kendaraan, membuat SPK, menagih, dan menerima pembayaran.</p>
-            <a href="#masuk">Masuk</a><a href="#layar">Layar</a><a href="#spk">SPK</a><a href="#invoice">Invoice</a><a href="#bayar">Pembayaran</a><a href="#pembelian-kecil">Belanja kecil</a><a href="#aturan">Aturan</a>
+            <a href="#masuk">Masuk</a><a href="#layar">Layar</a><a href="#spk">SPK</a><a href="#invoice">Invoice</a><a href="#bayar">Pembayaran</a><a href="#kirim-wa">Kirim WA</a><a href="#pembelian-kecil">Belanja kecil</a><a href="#aturan">Aturan</a>
         </div>
         <div class="role">
             <div class="role-title">Keuangan</div>
             <p>Semua tugas Admin Depan, ditambah piutang, hutang, kas, dan pengeluaran.</p>
-            <a href="#bayar">Pembayaran</a><a href="#batal-bayar">Batal bayar</a><a href="#piutang">Piutang</a><a href="#hutang">Hutang supplier</a><a href="#kas">Kas</a><a href="#pengeluaran">Pengeluaran</a><a href="#beranda">Beranda</a>
+            <a href="#bayar">Pembayaran</a><a href="#batal-bayar">Batal bayar</a><a href="#piutang">Piutang</a><a href="#hutang">Hutang supplier</a><a href="#kas">Kas</a><a href="#pengeluaran">Pengeluaran</a><a href="#rekap">Rekap harian</a><a href="#beranda">Beranda</a>
         </div>
         <div class="role">
             <div class="role-title">Gudang</div>
@@ -178,7 +178,7 @@
         <div class="role">
             <div class="role-title">Pemilik <small>dan Kepala Cabang</small></div>
             <p>Mengatur bengkel, cabang, staf, dan memantau usaha.</p>
-            <a href="#persiapan">Persiapan</a><a href="#pemilik">Pengaturan</a><a href="#cabang">Cabang</a><a href="#pengguna">Staf & akses</a><a href="#beranda">Beranda & laba</a><a href="#kunci">Kunci invoice</a>
+            <a href="#persiapan">Persiapan</a><a href="#pemilik">Pengaturan</a><a href="#cabang">Cabang</a><a href="#pengguna">Staf & akses</a><a href="#rekap">Rekap harian</a><a href="#beranda">Beranda & laba</a><a href="#kunci">Kunci invoice</a>
         </div>
     </div>
 
@@ -352,6 +352,18 @@
         </div>
         <figure><div class="phone"><img src="img/07-bayar.jpg" alt=""></div><figcaption>Bayar dengan satu atau beberapa metode</figcaption></figure>
     </div>
+    <div class="row" id="kirim-wa">
+        <div>
+            <h3>Kirim invoice lewat WhatsApp</h3>
+            <ol class="steps">
+                <li>Di halaman invoice, tekan <span class="ui">Kirim WA</span>. Di samping kwitansi juga ada <b>Kirim WA</b> untuk ucapan terima kasih atas pembayaran.</li>
+                <li>Periksa <b>Nomor WhatsApp</b> (dari data pelanggan; untuk Pelanggan umum, ketik nomornya) dan <b>Pesan</b>. Keduanya boleh diubah.</li>
+                <li>Tekan <span class="ui primary">Buka WhatsApp</span>, lalu tekan kirim di WhatsApp.</li>
+            </ol>
+            <p>Pesan berisi nomor invoice, total, yang sudah dibayar, sisa tagihan dan jatuh tempo, serta <b>tautan invoice</b>. Pelanggan membuka tautan tanpa perlu masuk, melihat invoice lengkap dan pembayarannya, dan bisa menyimpannya sebagai PDF.</p>
+            <div class="box note"><span class="label">Keamanan tautan</span><p>Tautan berlaku 30 hari, tidak bisa ditebak atau diubah, dan hanya menampilkan invoice itu. Invoice yang dibatalkan tidak bisa dikirim.</p></div>
+        </div>
+    </div>
     <div class="row">
         <div>
             <h3 id="piutang">Piutang pelanggan</h3>
@@ -442,6 +454,19 @@
             <div class="box tip"><span class="label">Saran</span><p>Bayar gaji dari rekening bank. Pengeluaran dari laci kasir tetap terlihat sebagai uang keluar oleh orang yang bisa melihat kas, walau keterangannya disembunyikan.</p></div>
         </div>
         <figure><div class="phone"><img src="img/12-pengeluaran.jpg" alt=""></div><figcaption>Pengeluaran baru</figcaption></figure>
+    </div>
+    <div class="row wide" id="rekap">
+        <div>
+            <h3>Rekap harian</h3>
+            <p>Menu <b>Rekap harian</b> (Pemilik, Kepala Cabang, Keuangan) merangkum satu hari di cabang ini. Bawaannya hari ini; pakai tombol panah atau tanggal untuk hari lain.</p>
+            <ul>
+                <li><b>Penjualan</b>: jumlah invoice, penjualan tanpa pajak, diskon, pajak, dan invoice yang belum lunas.</li>
+                <li><b>Uang masuk</b> per metode pembayaran; biaya kartu ditampilkan terpisah.</li>
+                <li><b>Saldo kas per akun</b>: saldo awal, masuk, keluar, saldo akhir. Saldo akhir <b>Laci Kasir</b> adalah uang yang seharusnya ada di laci malam itu.</li>
+                <li><b>Pengeluaran</b>, <b>Bayar supplier</b>, <b>Transfer antar akun</b>, kendaraan masuk dan SPK selesai, serta <b>Pembatalan hari ini</b> beserta alasannya.</li>
+            </ul>
+            <div class="box tip"><span class="label">Tutup kasir</span><p>Tekan <b>Cetak rekap</b> (A4). Hitung uang di laci, tulis di kolom <b>Hasil hitung</b>, lalu tanda tangani <b>Diserahkan oleh</b> dan <b>Diperiksa oleh</b>. Bila berbeda, catat selisihnya lewat <b>Hitung kas</b> dengan alasan.</p></div>
+        </div>
     </div>
 </section>
 

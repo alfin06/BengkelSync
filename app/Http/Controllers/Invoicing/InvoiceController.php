@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Invoicing;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\Permission;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
@@ -19,6 +20,7 @@ use App\Models\WorkOrderPart;
 use App\Models\WorkOrderServiceLine;
 use App\Services\Invoicing\InvoiceLock;
 use App\Services\Invoicing\InvoiceService;
+use App\Services\Invoicing\InvoiceShareService;
 use App\Support\BranchTime;
 use App\Support\Money;
 use App\Support\Quantity;
@@ -102,13 +104,13 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.show', $invoice)->with('success', __('invoices.created', ['number' => $invoice->number]));
     }
 
-    public function show(Request $request, Invoice $invoice, TenantContext $context, InvoiceLock $lock): Response
+    public function show(Request $request, Invoice $invoice, TenantContext $context, InvoiceLock $lock, InvoiceShareService $share): Response
     {
         Gate::authorize('view', $invoice);
 
         /** @var User $user */
         $user = $request->user();
-        $invoice->load(['customer', 'workOrder.vehicle', 'lines.part', 'receipts.payments.method', 'receipts.payments.voider', 'receipts.receiver']);
+        $invoice->load(['customer', 'branch', 'workOrder.vehicle', 'lines.part', 'receipts.payments.method', 'receipts.payments.voider', 'receipts.receiver']);
         $canPay = $user->can('pay', $invoice);
         $today = $context->today();
 
@@ -144,6 +146,15 @@ class InvoiceController extends Controller
                     'needs_reference' => $method->needs_reference,
                 ])->all()
                 : [],
+            // "Kirim WA": ready messages with a signed link to the invoice (not for cancelled ones).
+            'share' => $invoice->status === InvoiceStatus::Void ? null : [
+                'phone' => $share->phone($invoice),
+                'invoice_message' => $share->invoiceMessage($invoice),
+                'receipt_messages' => $invoice->receipts
+                    ->reject(fn (PaymentReceipt $receipt) => $receipt->isFullyVoided())
+                    ->mapWithKeys(fn (PaymentReceipt $receipt) => [$receipt->id => $share->receiptMessage($invoice, $receipt)])
+                    ->all(),
+            ],
             'today' => $today,
             'locked' => $lock->isLocked($invoice),
             'suggestedDueDate' => $invoice->due_date?->toDateString() ?? Carbon::parse($today)->addDays(7)->toDateString(),
@@ -159,7 +170,7 @@ class InvoiceController extends Controller
     /**
      * A5, plain black text: prints well on 2-ply paper (dot-matrix or laser).
      */
-    public function print(Request $request, Invoice $invoice): Response
+    public function print(Request $request, Invoice $invoice, InvoiceShareService $share): Response
     {
         Gate::authorize('view', $invoice);
 
@@ -167,14 +178,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoices/Print', [
             'invoice' => InvoiceResource::make($invoice)->resolve($request),
-            'branch' => [
-                'name' => $invoice->branch->name,
-                'address' => $invoice->branch->address,
-                'phone' => $invoice->branch->phone,
-                'npwp' => $invoice->branch->npwp,
-                'footer' => $invoice->branch->invoice_footer,
-                'logo_url' => $invoice->branch->logoUrl(),
-            ],
+            'branch' => $share->branchDetails($invoice->branch),
         ]);
     }
 

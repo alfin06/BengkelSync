@@ -87,6 +87,14 @@ Di halaman SPK:
 
 Saat pelanggan kembali melunasi, buka invoice-nya (atau lewat **Piutang pelanggan**) dan tekan **Bayar** lagi. Metodenya boleh berbeda dari pembayaran pertama. Setelah lunas, SPK otomatis **Ditutup**.
 
+### Mengirim invoice atau kwitansi lewat WhatsApp
+
+1. Di halaman invoice, tekan **Kirim WA** (di atas), atau **Kirim WA** di samping kwitansi untuk ucapan terima kasih atas pembayaran.
+2. Periksa **Nomor WhatsApp** (terisi dari data pelanggan; untuk **Pelanggan umum**, ketik nomornya) dan **Pesan**. Keduanya boleh diubah.
+3. Tekan **Buka WhatsApp**. WhatsApp di HP atau komputer terbuka dengan pesan yang sudah terisi; tekan kirim di WhatsApp.
+
+Pesan berisi nomor invoice, tanggal, kendaraan, total, yang sudah dibayar, sisa tagihan dan jatuh tempo, catatan kaki invoice, serta **tautan invoice**. Pelanggan membuka tautan itu tanpa perlu masuk, melihat invoice lengkap beserta pembayarannya, dan bisa menyimpannya sebagai PDF. Tautan berlaku **30 hari**, tidak bisa ditebak atau diubah, dan hanya menampilkan invoice itu. Invoice yang dibatalkan tidak bisa dikirim.
+
 ### e. Memperbaiki invoice
 
 - Tekan **Ubah** di invoice, perbaiki baris yang salah, isi **alasan**, lalu **Simpan perubahan**.
@@ -126,6 +134,18 @@ Keuangan bisa melakukan semua yang dilakukan Admin Depan, ditambah:
 - **Transfer**: memindahkan uang antar akun, mis. mengisi kas kecil dari laci kasir atau menyetor ke bank.
 - **Hitung kas**: isi jumlah uang yang benar-benar ada. Selisihnya dicatat dengan alasan. Dipakai juga untuk mengisi **saldo awal** saat mulai memakai aplikasi.
 - Laci kasir dan kas kecil tidak bisa minus. Saldo bank boleh minus.
+
+### Rekap harian
+
+Menu **Rekap harian** (Pemilik, Kepala Cabang, Keuangan) merangkum satu hari di cabang ini; bawaannya hari ini, dan tanggal lain bisa dipilih:
+- **Penjualan**: jumlah invoice, penjualan tanpa pajak, diskon, pajak, invoice yang belum lunas, dan daftar invoice hari itu.
+- **Uang masuk** per metode pembayaran (biaya kartu ditampilkan terpisah, tidak dihitung).
+- **Saldo kas per akun**: saldo awal, masuk, keluar, dan saldo akhir. Saldo akhir **Laci Kasir** adalah uang yang seharusnya ada di laci malam itu.
+- **Pengeluaran**, **Bayar supplier**, dan **Transfer antar akun** hari itu (pengeluaran gaji hanya terlihat oleh Pemilik).
+- **Bengkel**: kendaraan masuk dan SPK selesai.
+- **Pembatalan hari ini**: invoice dan pembayaran yang dibatalkan, beserta alasannya.
+
+Tekan **Cetak rekap** untuk mencetak di kertas **A4**, dengan kolom **Hasil hitung** untuk uang tunai yang dihitung dan tempat tanda tangan **Diserahkan oleh** dan **Diperiksa oleh**.
 
 ### Pengeluaran
 - **Catat pengeluaran** dari akun mana saja, dengan kategori dan foto nota.

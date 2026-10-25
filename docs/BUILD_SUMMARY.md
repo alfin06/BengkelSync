@@ -128,6 +128,10 @@ Each module: what users do, then the code that does it and the rules worth knowi
 ### Dashboard (Phase 2)
 - Workshop today, low stock, customer debt, supplier bills due, cash balances for everyone allowed; sales, money received, expenses, 12-month chart, top services and parts, jobs per mechanic for `dashboard.view_financials`; gross profit only for the Owner.
 
+### Daily summary and WhatsApp (2026-10-26)
+- **Rekap harian** (`report.view`): one day of the branch (sales, money received per method, cash per account from opening to closing, expenses, supplier payments, transfers, workshop counts, cancellations), printable on A4 for closing the cash drawer.
+- **Kirim WA** on invoices and kwitansi: opens WhatsApp with the customer's number and a ready message containing a signed, 30-day link to a read-only invoice page (no login).
+
 ### Shop and branch settings (Phase 2)
 - Branch management (2026-10-25): add, edit and delete branches on "Toko & cabang" (`BranchService`, `BranchPolicy`, `Settings/BranchForm`). Deleting is refused while work, debts or cash are left; a used branch is soft-deleted (restorable), an unused one removed for good.
 - Shop name and invoice lock period (Owner); branch name, address, phone, NPWP and logo (printed on all documents); tax and invoice footer on "Pajak & invoice".

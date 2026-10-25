@@ -19,6 +19,7 @@ use App\Http\Controllers\Inventory\PartStockController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Invoicing\InvoiceController;
 use App\Http\Controllers\Invoicing\InvoiceRevisionController;
+use App\Http\Controllers\Invoicing\PublicInvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mechanics\MechanicController;
 use App\Http\Controllers\Mechanics\MechanicKtpController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchasing\PurchaseController;
 use App\Http\Controllers\Purchasing\SupplierDebtController;
 use App\Http\Controllers\Purchasing\SupplierPaymentController;
+use App\Http\Controllers\Reports\DailySummaryController;
 use App\Http\Controllers\Settings\BranchController;
 use App\Http\Controllers\Settings\InvoiceSettingsController;
 use App\Http\Controllers\Settings\RoleController;
@@ -47,6 +49,12 @@ Route::redirect('/', '/dashboard');
 Route::post('/locale', [LocaleController::class, 'update'])
     ->middleware('throttle:20,1')
     ->name('locale.update');
+
+// An invoice opened by the customer from the WhatsApp link: signed and expiring, no login.
+Route::get('/i/{tenant}/{branch}/{invoice}', PublicInvoiceController::class)
+    ->whereNumber(['tenant', 'branch', 'invoice'])
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('invoices.public');
 
 // Everything below runs inside a tenant and an active branch (CLAUDE.md rules 1 and 2).
 Route::middleware(['auth', 'tenancy'])->group(function () {
@@ -136,6 +144,10 @@ Route::middleware(['auth', 'tenancy'])->group(function () {
     Route::put('/expense-categories/{expense_category}', [ExpenseCategoryController::class, 'update'])->name('expense-categories.update');
 
     // Cash ("Kas") of the active branch
+    // Daily summary of the active branch (report.view)
+    Route::get('/reports/daily', [DailySummaryController::class, 'show'])->name('reports.daily');
+    Route::get('/reports/daily/print', [DailySummaryController::class, 'print'])->name('reports.daily.print');
+
     Route::get('/cash', [CashController::class, 'index'])->name('cash.index');
     Route::post('/cash/transfer', [CashController::class, 'transfer'])->name('cash.transfer');
     Route::get('/cash/{cash_account}', [CashController::class, 'show'])->name('cash.show');

@@ -250,6 +250,8 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] User management (owner creates users with a password) + role/permission matrix UI
 - [x] Shop & branch settings (profile, logo, tax, invoice footer, invoice lock period)
 - [x] Branch management: add, edit and delete branches (Owner adds/deletes, branch managers edit their own)
+- [x] Daily summary ("Rekap harian", `report.view`): sales, money received per method, cash per account (opening, in, out, closing), expenses, supplier payments, transfers, workshop counts and the day's cancellations; printable on A4
+- [x] Send an invoice or kwitansi via WhatsApp: a wa.me message with a signed invoice link (30 days, no login, read-only)
 
 ### MVP — Pilot launch
 - [ ] Production server, HTTPS, daily backups with a tested restore, error tracking
@@ -260,7 +262,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [ ] Public sign-up, email verification, user invitations
 - [ ] Multi-branch UI: branch switcher, "all branches" dashboard, stock transfers
 - [ ] Reports + Excel export, tenant data export
-- [ ] WhatsApp invoice sharing, service reminders
+- [ ] WhatsApp service reminders (invoice sharing is done)
 - [ ] Kanban board for work orders
 - [ ] Plans and limits, trial, Midtrans/Xendit billing, read-only mode
 - [ ] Platform admin area
@@ -290,6 +292,8 @@ Output: a prioritized list (must fix / should fix / fine as is) and a proposed m
 - Pilot accounts: Owner (shop owner), Front Desk, Finance (section 2).
 - Settings: the owner can still fix locked invoices (marked in the history); logo per branch (2026-10-24).
 - Invoices from a work order (2026-10-26): jobs on the invoice can differ from the work order (renamed, repriced, removed, added outside the service catalog); parts keep their work order quantities.
+- WhatsApp (2026-10-26): invoices and kwitansi are sent with a wa.me link from the staff member's own WhatsApp (no paid API); the message carries a signed link to a read-only invoice page that expires after 30 days. Messages are always in Indonesian.
+- Daily summary (2026-10-26): for Owner, branch managers and Finance (`report.view`), printed on A4 with a column for the counted cash and signatures.
 - Part names on invoices (2026-10-26): every part line on an invoice (walk-in, from a work order, or edited) has its own printed name, prefilled with the part's name and editable; stock always follows the part itself.
 - Branches (2026-10-25): only the Owner adds and deletes branches; branch managers edit the branches they work in. A new branch gets the default cash accounts and payment method. The code (in document numbers) is fixed once the branch has issued a document. Deleting is refused while the branch has open work orders, unpaid invoices, unpaid supplier bills or money in its cash accounts, and never removes data: a branch with any data is soft-deleted and can be restored by the Owner; only a branch that was never used is removed for good.
 - Dashboard: sales and money received side by side; card fees not counted; gross profit only for the Owner (2026-10-24).
