@@ -218,7 +218,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 
 ### MVP — Phase 0: Audit & foundation
 - [x] Audit existing code (see section 10) and fill in "Current codebase state" in CLAUDE.md
-- [x] Security quick fixes: committed DB dump untracked, public sign-up removed, legacy KTP upload retired (git history rewrite of the dump is still pending, see AUDIT §6)
+- [x] Security quick fixes: committed DB dump untracked and removed from the git history (all branches and tags), public sign-up removed, legacy KTP upload retired
 - [x] Clean migration baseline (no production data exists; see docs/AUDIT.md)
 - [x] Tooling: Pest, Larastan, Pint, TypeScript checks
 - [x] Shared UI kit (mobile-first layout, money input, dialogs, list/card, pagination, empty states)
@@ -248,7 +248,7 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 - [x] Petty cash: transfers between cash accounts, cash count / adjustment, balances on the dashboard
 - [x] Dashboard (single branch view)
 - [x] User management (owner creates users with a password) + role/permission matrix UI
-- [x] Shop & branch settings (profile, logo, tax, invoice footer)
+- [x] Shop & branch settings (profile, logo, tax, invoice footer, invoice lock period)
 - [x] Branch management: add, edit and delete branches (Owner adds/deletes, branch managers edit their own)
 
 ### MVP — Pilot launch
@@ -259,7 +259,6 @@ Pilot setup: one tenant, one branch (the schema and code support more). The tena
 ### After pilot (deferred)
 - [ ] Public sign-up, email verification, user invitations
 - [ ] Multi-branch UI: branch switcher, "all branches" dashboard, stock transfers
-- [ ] Edit lock period setting
 - [ ] Reports + Excel export, tenant data export
 - [ ] WhatsApp invoice sharing, service reminders
 - [ ] Kanban board for work orders
