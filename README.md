@@ -5,7 +5,7 @@
 <h1 align="center">BengkelSync</h1>
 
 <p align="center">
-  Workshop management for Indonesian auto repair shops (bengkel): from the car arriving at the counter to the money in the drawer.
+  Workshop management for auto repair shops (bengkel): from the car arriving at the counter to the money in the drawer.
 </p>
 
 ---
@@ -13,8 +13,6 @@
 BengkelSync handles the daily work of a bengkel in one place: customers and their vehicles, work orders (SPK), invoices and payments, parts and stock, purchases and supplier debt, cash accounts and expenses. It is mobile-first, so staff can use it on a phone at the counter or in the workshop, and Indonesian-first (with English).
 
 It is built as a multi-tenant SaaS: one account (a shop) can run several branches, and every shop's data is isolated from the others.
-
-> **Status:** the MVP is complete and being prepared for a pilot in one shop (Bengkel Kalimas Lumas). See [docs/SPEC.md](docs/SPEC.md) section 9 for the roadmap and [docs/BUILD_SUMMARY.md](docs/BUILD_SUMMARY.md) for what is built.
 
 ## Features
 
